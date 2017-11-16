@@ -2,15 +2,13 @@ package sample;
 
 import javafx.application.Application;
 import javafx.event.ActionEvent;
-<<<<<<< Updated upstream
 import javafx.event.EventHandler;
 import javafx.event.EventType;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
-=======
 import javafx.geometry.Point3D;
 import javafx.scene.Group;
->>>>>>> Stashed changes
+import javafx.geometry.Point3D;
 import javafx.scene.Scene;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.canvas.Canvas;
@@ -18,39 +16,29 @@ import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 import javafx.scene.layout.BorderPane;
-<<<<<<< Updated upstream
 import javafx.scene.layout.StackPane;
-=======
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
->>>>>>> Stashed changes
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import javafx.util.Pair;
 
-import javax.swing.*;
-import java.awt.*;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.*;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class Main extends Application {
 
-<<<<<<< Updated upstream
-
-    private Desktop desktop = Desktop.getDesktop();
-=======
     private static final int WIDTH = 500;
     private static final int HEIGHT = 500;
 
     private List<Point3D> vertices = new ArrayList<>();
     private List<Pair> lines = new ArrayList<>();
     private double maxY = 0;
->>>>>>> Stashed changes
 
     @Override
     public void start(Stage primaryStage) throws Exception{
@@ -67,7 +55,6 @@ public class Main extends Application {
         Menu menu = new Menu("File");
         MenuItem newData = new MenuItem("New data...");
 
-<<<<<<< Updated upstream
         newDataButton.addEventHandler(ActionEvent.ACTION,
                 new EventHandler<ActionEvent>() {
                     @Override
@@ -77,32 +64,16 @@ public class Main extends Application {
                         if (file != null) {
                             openVerticesFile(file);
                         }
-=======
-        final FileChooser fileChooser = new FileChooser();
-        newData.addEventHandler(ActionEvent.ACTION,
-                event -> {
-                    configureFileChooser(fileChooser, true);
-                    File verticesFile = fileChooser.showOpenDialog(primaryStage);
-                    if (verticesFile != null) {
-                        openVerticesFile(verticesFile);
->>>>>>> Stashed changes
-                    }
-                }
-        );
 
-        newDataButton.addEventHandler(ActionEvent.ACTION,
-                new EventHandler<ActionEvent>() {
-                    @Override
-                    public void handle(ActionEvent event) {
                         configureFileChooser(fileChooser, false);
-                        File file = fileChooser.showOpenDialog(primaryStage);
-                        if (file != null) {
-                            openLinesFile(file);
+                        File linesFile = fileChooser.showOpenDialog(primaryStage);
+                        if (linesFile != null) {
+                            openLinesFile(linesFile);
                         }
-                    }
 
-                    GraphicsContext gc = canvas.getGraphicsContext2D();
-                    draw(gc);
+                        GraphicsContext gc = canvas.getGraphicsContext2D();
+                        draw(gc);
+                    }
                 }
         );
         menu.getItems().add(newData);
@@ -112,12 +83,10 @@ public class Main extends Application {
         borderPane.setTop(menuBar);
         borderPane.setCenter(wrapper);
 
-<<<<<<< Updated upstream
         primaryStage.setScene(new Scene(root, 300, 250));
-=======
-        root.getChildren().add(borderPane);
+        Scene scene = new Scene(root, 300, 250);
+        scene.setFill(Color.BLACK);
         primaryStage.setScene(scene);
->>>>>>> Stashed changes
         primaryStage.show();
     }
 
@@ -158,13 +127,10 @@ public class Main extends Application {
         );
     }
 
-<<<<<<< Updated upstream
-=======
     private Point3D parseVertexRow(String line) {
         String[] tokens = line.split(" ");
         if(tokens.length != 3)
             return null;
-
         double xCoordinate = Double.parseDouble(tokens[0]) * 10;
         double yCoordinate = Double.parseDouble(tokens[1]) * 10;
         if (yCoordinate > maxY)
@@ -179,18 +145,19 @@ public class Main extends Application {
         }
     }
 
->>>>>>> Stashed changes
     private void openVerticesFile(File file) {
+        List<Point3D> vertices = new ArrayList<>();
         try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
             String line;
-            while ((line = reader.readLine()) != null)
-                System.out.println(line);
-
+            while ((line = reader.readLine()) != null) {
+                Point3D tmp = parseVertexRow(line);
+                if (tmp == null)
+                    break;
+                vertices.add(tmp);
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
-<<<<<<< Updated upstream
-=======
 
         this.vertices = vertices;
 
@@ -212,26 +179,26 @@ public class Main extends Application {
         for (Pair tmp : this.lines) {
             System.out.println(tmp.toString());
         }
->>>>>>> Stashed changes
     }
 
     private void openLinesFile(File file) {
+        List<Pair> lines = new ArrayList<>();
         try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
             String line;
-            while ((line = reader.readLine()) != null)
-                System.out.println(line);
-
+            while ((line = reader.readLine()) != null) {
+                Pair<Integer, Integer> tmp = parseLineRow(line);
+                if (tmp == null)
+                    break;
+                lines.add(tmp);
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
-<<<<<<< Updated upstream
-=======
 
         this.lines = lines;
 
         // debugging
         printLines();
->>>>>>> Stashed changes
     }
 
 }
