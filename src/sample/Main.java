@@ -2,11 +2,22 @@ package sample;
 
 import javafx.application.Application;
 import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
+import javafx.event.EventType;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.geometry.Point3D;
+import javafx.scene.Group;
 import javafx.geometry.Point3D;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.ToolBar;
+import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.canvas.Canvas;
+import javafx.scene.control.Menu;
+import javafx.scene.control.MenuBar;
+import javafx.scene.control.MenuItem;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
@@ -22,42 +33,81 @@ import java.util.List;
 
 public class Main extends Application {
 
+    private static final int WIDTH = 500;
+    private static final int HEIGHT = 500;
+
     private List<Point3D> vertices = new ArrayList<>();
     private List<Pair> lines = new ArrayList<>();
+    private double maxY = 0;
 
     @Override
     public void start(Stage primaryStage) throws Exception{
+
         primaryStage.setTitle("COMP 4560 Assignment 5 - A00797801");
+        Group root = new Group();
+        Scene scene = new Scene(root, WIDTH, HEIGHT, Color.BLACK);
 
-        final FileChooser fileChooser = new FileChooser();
+        Pane wrapper = new Pane();
+        Canvas canvas = new Canvas(scene.getWidth(), scene.getHeight());
+        wrapper.getChildren().add(canvas);
 
-        Button newDataButton = new Button("New data....");
-        newDataButton.setStyle("fx-alignment: TOP-CENTER");
+        MenuBar menuBar = new MenuBar();
+        Menu menu = new Menu("File");
+        MenuItem newData = new MenuItem("New data...");
 
         newDataButton.addEventHandler(ActionEvent.ACTION,
-                event -> {
-                    configureFileChooser(fileChooser, true);
-                    File verticesFile = fileChooser.showOpenDialog(primaryStage);
-                    if (verticesFile != null) {
-                        openVerticesFile(verticesFile);
-                    }
+                new EventHandler<ActionEvent>() {
+                    @Override
+                    public void handle(ActionEvent event) {
+                        configureFileChooser(fileChooser, true);
+                        File file = fileChooser.showOpenDialog(primaryStage);
+                        if (file != null) {
+                            openVerticesFile(file);
+                        }
 
-                    configureFileChooser(fileChooser, false);
-                    File linesFile = fileChooser.showOpenDialog(primaryStage);
-                    if (linesFile != null) {
-                        openLinesFile(linesFile);
+                        configureFileChooser(fileChooser, false);
+                        File linesFile = fileChooser.showOpenDialog(primaryStage);
+                        if (linesFile != null) {
+                            openLinesFile(linesFile);
+                        }
+
+                        GraphicsContext gc = canvas.getGraphicsContext2D();
+                        draw(gc);
                     }
                 }
         );
+        menu.getItems().add(newData);
+        menuBar.getMenus().add(menu);
 
-        BorderPane root = new BorderPane();
-        ToolBar toolbar = new ToolBar(newDataButton);
-        root.setTop(toolbar);
+        BorderPane borderPane = new BorderPane();
+        borderPane.setTop(menuBar);
+        borderPane.setCenter(wrapper);
 
+        primaryStage.setScene(new Scene(root, 300, 250));
         Scene scene = new Scene(root, 300, 250);
         scene.setFill(Color.BLACK);
         primaryStage.setScene(scene);
         primaryStage.show();
+    }
+
+    private void draw(GraphicsContext gc) {
+        gc.setStroke(Color.WHITE);
+        gc.setLineWidth(3);
+        for (Pair tmp : this.lines) {
+
+            // debugging
+            System.out.print(tmp.toString() + " | ");
+            System.out.print(vertices.get((int)tmp.getKey() - 1).getX() + " " +
+                    vertices.get((int)tmp.getKey() - 1).getY() + " " +
+                    vertices.get((int)tmp.getValue() - 1).getX() + " " +
+                    vertices.get((int)tmp.getValue() - 1).getY());
+            System.out.println();
+
+            gc.strokeLine(vertices.get((int)tmp.getKey()).getX(),
+                    (vertices.get((int)tmp.getKey()).getY() * -1) + maxY,
+                          vertices.get((int)tmp.getValue()).getX(),
+                    (vertices.get((int)tmp.getValue()).getY() * -1) + maxY);
+        }
     }
 
     public static void main(String[] args) {
@@ -81,10 +131,11 @@ public class Main extends Application {
         String[] tokens = line.split(" ");
         if(tokens.length != 3)
             return null;
-
-        double xCoordinate = Double.parseDouble(tokens[0]);
-        double yCoordinate = Double.parseDouble(tokens[1]);
-        double zCoordinate = Double.parseDouble(tokens[2]);
+        double xCoordinate = Double.parseDouble(tokens[0]) * 10;
+        double yCoordinate = Double.parseDouble(tokens[1]) * 10;
+        if (yCoordinate > maxY)
+            maxY = yCoordinate;
+        double zCoordinate = Double.parseDouble(tokens[2]) * 10;
         return new Point3D(xCoordinate, yCoordinate, zCoordinate);
     }
 
@@ -109,6 +160,8 @@ public class Main extends Application {
         }
 
         this.vertices = vertices;
+
+        // debugging
         printVertices();
     }
 
@@ -143,6 +196,8 @@ public class Main extends Application {
         }
 
         this.lines = lines;
+
+        // debugging
         printLines();
     }
 
