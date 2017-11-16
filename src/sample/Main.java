@@ -2,13 +2,8 @@ package sample;
 
 import javafx.application.Application;
 import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
-import javafx.event.EventType;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
 import javafx.geometry.Point3D;
 import javafx.scene.Group;
-import javafx.geometry.Point3D;
 import javafx.scene.Scene;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.canvas.Canvas;
@@ -16,7 +11,6 @@ import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.StackPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
@@ -55,25 +49,23 @@ public class Main extends Application {
         Menu menu = new Menu("File");
         MenuItem newData = new MenuItem("New data...");
 
-        newDataButton.addEventHandler(ActionEvent.ACTION,
-                new EventHandler<ActionEvent>() {
-                    @Override
-                    public void handle(ActionEvent event) {
-                        configureFileChooser(fileChooser, true);
-                        File file = fileChooser.showOpenDialog(primaryStage);
-                        if (file != null) {
-                            openVerticesFile(file);
-                        }
-
-                        configureFileChooser(fileChooser, false);
-                        File linesFile = fileChooser.showOpenDialog(primaryStage);
-                        if (linesFile != null) {
-                            openLinesFile(linesFile);
-                        }
-
-                        GraphicsContext gc = canvas.getGraphicsContext2D();
-                        draw(gc);
+        newData.addEventHandler(ActionEvent.ACTION,
+                event -> {
+                    FileChooser fileChooser = new FileChooser();
+                    configureFileChooser(fileChooser, true);
+                    File file = fileChooser.showOpenDialog(primaryStage);
+                    if (file != null) {
+                        openVerticesFile(file);
                     }
+
+                    configureFileChooser(fileChooser, false);
+                    File linesFile = fileChooser.showOpenDialog(primaryStage);
+                    if (linesFile != null) {
+                        openLinesFile(linesFile);
+                    }
+
+                    GraphicsContext gc = canvas.getGraphicsContext2D();
+                    draw(gc);
                 }
         );
         menu.getItems().add(newData);
@@ -83,9 +75,7 @@ public class Main extends Application {
         borderPane.setTop(menuBar);
         borderPane.setCenter(wrapper);
 
-        primaryStage.setScene(new Scene(root, 300, 250));
-        Scene scene = new Scene(root, 300, 250);
-        scene.setFill(Color.BLACK);
+        root.getChildren().add(borderPane);
         primaryStage.setScene(scene);
         primaryStage.show();
     }
