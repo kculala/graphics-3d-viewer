@@ -7,6 +7,7 @@ import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.canvas.Canvas;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
@@ -52,10 +53,11 @@ public class Main extends Application {
         newData.addEventHandler(ActionEvent.ACTION,
                 event -> {
                     FileChooser fileChooser = new FileChooser();
+
                     configureFileChooser(fileChooser, true);
-                    File file = fileChooser.showOpenDialog(primaryStage);
-                    if (file != null) {
-                        openVerticesFile(file);
+                    File verticesFile = fileChooser.showOpenDialog(primaryStage);
+                    if (verticesFile != null) {
+                        openVerticesFile(verticesFile);
                     }
 
                     configureFileChooser(fileChooser, false);
@@ -64,8 +66,10 @@ public class Main extends Application {
                         openLinesFile(linesFile);
                     }
 
-                    GraphicsContext gc = canvas.getGraphicsContext2D();
-                    draw(gc);
+                    if (verticesFile != null && linesFile != null) {
+                        GraphicsContext gc = canvas.getGraphicsContext2D();
+                        draw(gc);
+                    }
                 }
         );
         menu.getItems().add(newData);
@@ -78,6 +82,16 @@ public class Main extends Application {
         root.getChildren().add(borderPane);
         primaryStage.setScene(scene);
         primaryStage.show();
+
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Usage");
+        alert.setHeaderText(null);
+        alert.setContentText("Please select two (2) files:\n" +
+                "The first file should contain a list of 3 numbers representing a vertex\n" +
+                "e.g. 10 10 0\n" +
+                "The second file should contain a list of 2 numbers representing a line\n" +
+                "e.g. 1 2");
+        alert.showAndWait();
     }
 
     private void draw(GraphicsContext gc) {
