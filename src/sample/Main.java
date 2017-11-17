@@ -26,8 +26,14 @@ import java.util.List;
 public class Main extends Application {
 
     private static final int WIDTH = 600;
-    private static final int HEIGHT = 550;
+    private static final int HEIGHT = 600;
     private static final int GRID_SPACING = 10;
+    private static final int SHAPE_DIMENSION = 20;
+    private static final int SHAPE_DIMENSION_SCALED = SHAPE_DIMENSION * GRID_SPACING ;
+
+    // offset to center of pane
+    private static final int SHAPE_WIDTH_OFFSET = (WIDTH/2) - (SHAPE_DIMENSION_SCALED/2);
+    private static final int SHAPE_HEIGHT_OFFSET = (HEIGHT/2) - (SHAPE_DIMENSION_SCALED/2) + SHAPE_DIMENSION_SCALED;
 
     private static final String SCENE_TITLE = "COMP 4560 Assignment 5 - A00797801";
     private static final String USAGE_TITLE = "Usage";
@@ -37,7 +43,7 @@ public class Main extends Application {
             "The second file should contain a list of 2 numbers representing a line\n" +
             "e.g. 1 2";
     private static final String MENU_LABEL_FILE = "File";
-    private static final String MENU_ITEM_LABEL_NEW_DATA = "New DATA...";
+    private static final String MENU_ITEM_LABEL_NEW_DATA = "New Data...";
 
     private enum ImagePaths {
         TRANSLATE_LEFT ("left"),
@@ -93,7 +99,6 @@ public class Main extends Application {
 
     private List<Point3D> vertices = new ArrayList<>();
     private List<Pair> lines = new ArrayList<>();
-    private double maxY = 0;
 
     @Override
     public void start(Stage primaryStage) throws Exception{
@@ -253,21 +258,21 @@ public class Main extends Application {
 
     private void draw(GraphicsContext gc) {
         gc.setStroke(Color.WHITE);
-        gc.setLineWidth(3);
+        gc.setLineWidth(1);
         for (Pair tmp : this.lines) {
 
             // debugging
             System.out.print(tmp.toString() + " | ");
-            System.out.print(vertices.get((int)tmp.getKey() - 1).getX() + " " +
-                    vertices.get((int)tmp.getKey() - 1).getY() + " " +
-                    vertices.get((int)tmp.getValue() - 1).getX() + " " +
-                    vertices.get((int)tmp.getValue() - 1).getY());
+            System.out.print(vertices.get((int)tmp.getKey() - 1).getX() + SHAPE_WIDTH_OFFSET + " " +
+                    vertices.get((int)tmp.getKey() - 1).getY() + SHAPE_HEIGHT_OFFSET + " " +
+                    vertices.get((int)tmp.getValue() - 1).getX() + SHAPE_WIDTH_OFFSET + " " +
+                    vertices.get((int)tmp.getValue() - 1).getY() + SHAPE_HEIGHT_OFFSET);
             System.out.println();
 
-            gc.strokeLine(vertices.get((int)tmp.getKey()).getX(),
-                    (vertices.get((int)tmp.getKey()).getY() * -1) + maxY,
-                          vertices.get((int)tmp.getValue()).getX(),
-                    (vertices.get((int)tmp.getValue()).getY() * -1) + maxY);
+            gc.strokeLine(vertices.get((int)tmp.getKey()).getX() + SHAPE_WIDTH_OFFSET,
+                          (vertices.get((int)tmp.getKey()).getY() * -1) + SHAPE_HEIGHT_OFFSET,
+                          vertices.get((int)tmp.getValue()).getX() + SHAPE_WIDTH_OFFSET,
+                          (vertices.get((int)tmp.getValue()).getY() * -1) + SHAPE_HEIGHT_OFFSET);
         }
     }
 
@@ -294,8 +299,6 @@ public class Main extends Application {
             return null;
         double xCoordinate = Double.parseDouble(tokens[0]) * GRID_SPACING;
         double yCoordinate = Double.parseDouble(tokens[1]) * GRID_SPACING;
-        if (yCoordinate > maxY)
-            maxY = yCoordinate;
         double zCoordinate = Double.parseDouble(tokens[2]) * GRID_SPACING;
         return new Point3D(xCoordinate, yCoordinate, zCoordinate);
     }
