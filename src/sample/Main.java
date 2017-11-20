@@ -3,7 +3,6 @@ package sample;
 import javafx.application.Application;
 import javafx.event.ActionEvent;
 import javafx.geometry.Orientation;
-import javafx.geometry.Point3D;
 import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.canvas.GraphicsContext;
@@ -97,7 +96,8 @@ public class Main extends Application {
         }
     }
 
-    private List<Point3D> vertices = new ArrayList<>();
+    private List<Vertex> initialVertices = new ArrayList<>();
+    private List<Vertex> vertices = new ArrayList<>();
     private List<Pair> lines = new ArrayList<>();
 
     @Override
@@ -112,6 +112,15 @@ public class Main extends Application {
         alert.setHeaderText(null);
         alert.setContentText(INSTRUCTIONS);
 //        alert.showAndWait();
+
+        // canvas
+        Pane wrapper = new Pane();
+        Canvas canvas = new Canvas();
+        wrapper.getChildren().add(canvas);
+        canvas.widthProperty().bind(wrapper.widthProperty());
+        canvas.heightProperty().bind(wrapper.heightProperty());
+
+        GraphicsContext gc = canvas.getGraphicsContext2D();
 
         // toolbar
         Image imageLeft = new Image(new FileInputStream(ImagePaths.TRANSLATE_LEFT.toString()));
@@ -205,13 +214,6 @@ public class Main extends Application {
                                   buttonRestore, buttonExit, new Separator(),
                                   spinX, spinY, spinZ);
 
-        // canvas
-        Pane wrapper = new Pane();
-        Canvas canvas = new Canvas();
-        wrapper.getChildren().add(canvas);
-        canvas.widthProperty().bind(wrapper.widthProperty());
-        canvas.heightProperty().bind(wrapper.heightProperty());
-
         // menu
         MenuBar menuBar = new MenuBar();
         Menu menu = new Menu(MENU_LABEL_FILE);
@@ -236,7 +238,6 @@ public class Main extends Application {
                     }
 
                     if (verticesFile != null && linesFile != null) {
-                        GraphicsContext gc = canvas.getGraphicsContext2D();
                         draw(gc);
                     }
                 }
@@ -263,16 +264,16 @@ public class Main extends Application {
 
             // debugging
             System.out.print(tmp.toString() + " | ");
-            System.out.print(vertices.get((int)tmp.getKey() - 1).getX() + SHAPE_WIDTH_OFFSET + " " +
-                    vertices.get((int)tmp.getKey() - 1).getY() + SHAPE_HEIGHT_OFFSET + " " +
-                    vertices.get((int)tmp.getValue() - 1).getX() + SHAPE_WIDTH_OFFSET + " " +
-                    vertices.get((int)tmp.getValue() - 1).getY() + SHAPE_HEIGHT_OFFSET);
+            System.out.print(vertices.get((int)tmp.getKey() - 1).getxCoordinate() + SHAPE_WIDTH_OFFSET + " " +
+                    vertices.get((int)tmp.getKey() - 1).getyCoordinate() + SHAPE_HEIGHT_OFFSET + " " +
+                    vertices.get((int)tmp.getValue() - 1).getxCoordinate() + SHAPE_WIDTH_OFFSET + " " +
+                    vertices.get((int)tmp.getValue() - 1).getyCoordinate() + SHAPE_HEIGHT_OFFSET);
             System.out.println();
 
-            gc.strokeLine(vertices.get((int)tmp.getKey()).getX() + SHAPE_WIDTH_OFFSET,
-                          (vertices.get((int)tmp.getKey()).getY() * -1) + SHAPE_HEIGHT_OFFSET,
-                          vertices.get((int)tmp.getValue()).getX() + SHAPE_WIDTH_OFFSET,
-                          (vertices.get((int)tmp.getValue()).getY() * -1) + SHAPE_HEIGHT_OFFSET);
+            gc.strokeLine(vertices.get((int)tmp.getKey()).getxCoordinate() + SHAPE_WIDTH_OFFSET,
+                          (vertices.get((int)tmp.getKey()).getyCoordinate() * -1) + SHAPE_HEIGHT_OFFSET,
+                          vertices.get((int)tmp.getValue()).getxCoordinate() + SHAPE_WIDTH_OFFSET,
+                          (vertices.get((int)tmp.getValue()).getyCoordinate() * -1) + SHAPE_HEIGHT_OFFSET);
         }
     }
 
@@ -293,28 +294,30 @@ public class Main extends Application {
         );
     }
 
-    private Point3D parseVertexRow(String line) {
+    private Vertex parseVertexRow(String line) {
         String[] tokens = line.split(" ");
         if(tokens.length != 3)
             return null;
-        double xCoordinate = Double.parseDouble(tokens[0]) * GRID_SPACING;
-        double yCoordinate = Double.parseDouble(tokens[1]) * GRID_SPACING;
-        double zCoordinate = Double.parseDouble(tokens[2]) * GRID_SPACING;
-        return new Point3D(xCoordinate, yCoordinate, zCoordinate);
+
+        Vertex vertex = new Vertex();
+        vertex.setXCoordinate(Double.parseDouble(tokens[0]) * GRID_SPACING);
+        vertex.setyCoordinate(Double.parseDouble(tokens[1]) * GRID_SPACING);
+        vertex.setzCoordinate(Double.parseDouble(tokens[2]) * GRID_SPACING);
+        return vertex;
     }
 
     private void printVertices() {
-        for (Point3D temp : this.vertices) {
+        for (Vertex temp : this.vertices) {
             System.out.println(temp.toString());
         }
     }
 
     private void openVerticesFile(File file) {
-        List<Point3D> vertices = new ArrayList<>();
+        List<Vertex> vertices = new ArrayList<>();
         try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
             String line;
             while ((line = reader.readLine()) != null) {
-                Point3D tmp = parseVertexRow(line);
+                Vertex tmp = parseVertexRow(line);
                 if (tmp == null)
                     break;
                 vertices.add(tmp);
@@ -323,7 +326,8 @@ public class Main extends Application {
             e.printStackTrace();
         }
 
-        this.vertices = vertices;
+        this.initialVertices = vertices;
+        this.vertices = this.initialVertices;
 
         // debugging
         printVertices();
