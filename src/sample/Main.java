@@ -96,8 +96,9 @@ public class Main extends Application {
         }
     }
 
-    private List<Vertex> initialVertices = new ArrayList<>();
-    private List<Vertex> vertices = new ArrayList<>();
+    private List<Vertex> initialShape = new ArrayList<>();
+    private List<Vertex> currentShape = new ArrayList<>();
+    private List<Vertex> tNet = new ArrayList<>();
     private List<Pair> lines = new ArrayList<>();
 
     @Override
@@ -111,7 +112,7 @@ public class Main extends Application {
         alert.setTitle(USAGE_TITLE);
         alert.setHeaderText(null);
         alert.setContentText(INSTRUCTIONS);
-//        alert.showAndWait();
+        // alert.showAndWait();
 
         // canvas
         Pane wrapper = new Pane();
@@ -121,6 +122,7 @@ public class Main extends Application {
         canvas.heightProperty().bind(wrapper.heightProperty());
 
         GraphicsContext gc = canvas.getGraphicsContext2D();
+        initTNet();
 
         // toolbar
         Image imageLeft = new Image(new FileInputStream(ImagePaths.TRANSLATE_LEFT.toString()));
@@ -128,24 +130,44 @@ public class Main extends Application {
         buttonTranslateLeft.setGraphic(new ImageView(imageLeft));
         Tooltip tooltipLeft = new Tooltip(Tooltips.TRANSLATE_LEFT.toString());
         buttonTranslateLeft.setTooltip(tooltipLeft);
+        buttonTranslateLeft.setOnAction(e -> {
+            clearScreen(gc, canvas);
+            translate(-10.0, 0.0, 0.0);
+            draw(gc);
+        });
 
         Image imageRight = new Image(new FileInputStream(ImagePaths.TRANSLATE_RIGHT.toString()));
         Button buttonTranslateRight = new Button();
         buttonTranslateRight.setGraphic(new ImageView(imageRight));
         Tooltip tooltipRight = new Tooltip(Tooltips.TRANSLATE_RIGHT.toString());
         buttonTranslateRight.setTooltip(tooltipRight);
+        buttonTranslateRight.setOnAction(e -> {
+            clearScreen(gc, canvas);
+            translate(10.0, 0.0, 0.0);
+            draw(gc);
+        });
 
         Image imageUp = new Image(new FileInputStream(ImagePaths.TRANSLATE_UP.toString()));
         Button buttonTranslateUp = new Button();
         buttonTranslateUp.setGraphic(new ImageView(imageUp));
         Tooltip tooltipUp = new Tooltip(Tooltips.TRANSLATE_UP.toString());
         buttonTranslateUp.setTooltip(tooltipUp);
+        buttonTranslateUp.setOnAction(e -> {
+            clearScreen(gc, canvas);
+            translate(0.0, 10.0, 0.0);
+            draw(gc);
+        });
 
         Image imageDown = new Image(new FileInputStream(ImagePaths.TRANSLATE_DOWN.toString()));
         Button buttonTranslateDown = new Button();
         buttonTranslateDown.setGraphic(new ImageView(imageDown));
         Tooltip tooltipDown = new Tooltip(Tooltips.TRANSLATE_DOWN.toString());
         buttonTranslateDown.setTooltip(tooltipDown);
+        buttonTranslateDown.setOnAction(e -> {
+            clearScreen(gc, canvas);
+            translate(0.0, -10.0, 0.0);
+            draw(gc);
+        });
 
         Image imageScaleUp = new Image(new FileInputStream(ImagePaths.SCALE_UP.toString()));
         Button buttonScaleUp = new Button();
@@ -194,6 +216,13 @@ public class Main extends Application {
         buttonRestore.setGraphic(new ImageView(imageRestore));
         Tooltip tooltipRestore = new Tooltip(Tooltips.RESTORE.toString());
         buttonRestore.setTooltip(tooltipRestore);
+
+        buttonRestore.setOnAction(e -> {
+            clearScreen(gc, canvas);
+            currentShape = initialShape;
+            initTNet();
+            draw(gc);
+        });
 
         Image imageExit = new Image(new FileInputStream(ImagePaths.EXIT.toString()));
         Button buttonExit = new Button();
@@ -257,23 +286,74 @@ public class Main extends Application {
         primaryStage.show();
     }
 
+    private void initTNet() {
+        tNet = new ArrayList<>();
+        Vertex r1 = new Vertex(1.0,0.0,0.0, 0.0);
+        Vertex r2 = new Vertex(0.0,1.0,0.0, 0.0);
+        Vertex r3 = new Vertex(0.0,0.0,1.0, 0.0);
+        Vertex r4 = new Vertex(0.0, 0.0,0.0, 1.0);
+        tNet.addAll(Arrays.asList(r1, r2, r3, r4));
+    }
+
+    private List<Vertex> multiplyMatrix(List<Vertex> matrixA, List<Vertex> matrixB) {
+        List<Vertex> matrixC = new ArrayList<>();
+        for (Vertex row : matrixA) {
+            Vertex vertex = new Vertex();
+            Double x = (row.getX() * matrixB.get(0).getX()) +
+                       (row.getY() * matrixB.get(1).getX()) +
+                       (row.getZ() * matrixB.get(2).getX()) +
+                       (row.getH() * matrixB.get(3).getX());
+            Double y = (row.getX() * matrixB.get(0).getY()) +
+                       (row.getY() * matrixB.get(1).getY()) +
+                       (row.getZ() * matrixB.get(2).getY()) +
+                       (row.getH() * matrixB.get(3).getY());
+            Double z = (row.getX() * matrixB.get(0).getZ()) +
+                       (row.getY() * matrixB.get(1).getZ()) +
+                       (row.getZ() * matrixB.get(2).getZ()) +
+                       (row.getH() * matrixB.get(3).getZ());
+            Double h = (row.getX() * matrixB.get(0).getH()) +
+                       (row.getY() * matrixB.get(1).getH()) +
+                       (row.getZ() * matrixB.get(2).getH()) +
+                       (row.getH() * matrixB.get(3).getH());
+            vertex.setX(x);
+            vertex.setY(y);
+            vertex.setZ(z);
+            vertex.setH(h);
+            matrixC.add(vertex);
+        }
+        return matrixC;
+    }
+
+    private void translate(Double xShift, Double yShift, Double zShift) {
+        List<Vertex> translationMatrix = new ArrayList<>();
+        Vertex r1 = new Vertex(1.0,0.0,0.0, 0.0);
+        Vertex r2 = new Vertex(0.0,1.0,0.0, 0.0);
+        Vertex r3 = new Vertex(0.0,0.0,1.0, 0.0);
+        Vertex r4 = new Vertex(xShift, yShift,zShift, 1.0);
+        translationMatrix.addAll(Arrays.asList(r1, r2, r3, r4));
+        tNet = multiplyMatrix(translationMatrix, tNet);
+        currentShape = multiplyMatrix(currentShape, tNet);
+        printVertices();
+    }
+
+    private void clearScreen(GraphicsContext gc, Canvas canvas) {
+        gc.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
+    }
+
     private void draw(GraphicsContext gc) {
         gc.setStroke(Color.WHITE);
         gc.setLineWidth(1);
         for (Pair tmp : this.lines) {
 
-            // debugging
-            System.out.print(tmp.toString() + " | ");
-            System.out.print(vertices.get((int)tmp.getKey() - 1).getxCoordinate() + SHAPE_WIDTH_OFFSET + " " +
-                    vertices.get((int)tmp.getKey() - 1).getyCoordinate() + SHAPE_HEIGHT_OFFSET + " " +
-                    vertices.get((int)tmp.getValue() - 1).getxCoordinate() + SHAPE_WIDTH_OFFSET + " " +
-                    vertices.get((int)tmp.getValue() - 1).getyCoordinate() + SHAPE_HEIGHT_OFFSET);
-            System.out.println();
+            double x1 = this.currentShape.get((int)tmp.getKey()).getX() + SHAPE_WIDTH_OFFSET;
+            double y1 = (this.currentShape.get((int)tmp.getKey()).getY() * -1) + SHAPE_HEIGHT_OFFSET;
+            double x2 = this.currentShape.get((int)tmp.getValue()).getX() + SHAPE_WIDTH_OFFSET;
+            double y2 = (this.currentShape.get((int)tmp.getValue()).getY() * -1) + SHAPE_HEIGHT_OFFSET;
 
-            gc.strokeLine(vertices.get((int)tmp.getKey()).getxCoordinate() + SHAPE_WIDTH_OFFSET,
-                          (vertices.get((int)tmp.getKey()).getyCoordinate() * -1) + SHAPE_HEIGHT_OFFSET,
-                          vertices.get((int)tmp.getValue()).getxCoordinate() + SHAPE_WIDTH_OFFSET,
-                          (vertices.get((int)tmp.getValue()).getyCoordinate() * -1) + SHAPE_HEIGHT_OFFSET);
+            // debugging
+            // System.out.print(tmp.toString() + " | " + x1 + " " + y1 + " " + x2 + " " + y2 + "\n");
+
+            gc.strokeLine(x1, y1, x2, y2);
         }
     }
 
@@ -298,16 +378,18 @@ public class Main extends Application {
         String[] tokens = line.split(" ");
         if(tokens.length != 3)
             return null;
-
         Vertex vertex = new Vertex();
-        vertex.setXCoordinate(Double.parseDouble(tokens[0]) * GRID_SPACING);
-        vertex.setyCoordinate(Double.parseDouble(tokens[1]) * GRID_SPACING);
-        vertex.setzCoordinate(Double.parseDouble(tokens[2]) * GRID_SPACING);
+        Double x = Double.parseDouble(tokens[0]) * GRID_SPACING;
+        Double y = Double.parseDouble(tokens[1]) * GRID_SPACING;
+        Double z = Double.parseDouble(tokens[2]) * GRID_SPACING;
+        vertex.setX(x);
+        vertex.setY(y);
+        vertex.setZ(z);
         return vertex;
     }
 
     private void printVertices() {
-        for (Vertex temp : this.vertices) {
+        for (Vertex temp : this.currentShape) {
             System.out.println(temp.toString());
         }
     }
@@ -326,11 +408,11 @@ public class Main extends Application {
             e.printStackTrace();
         }
 
-        this.initialVertices = vertices;
-        this.vertices = this.initialVertices;
+        this.initialShape = vertices;
+        this.currentShape = this.initialShape;
 
         // debugging
-        printVertices();
+        // printVertices();
     }
 
     private Pair<Integer, Integer> parseLineRow(String line) {
@@ -366,7 +448,7 @@ public class Main extends Application {
         this.lines = lines;
 
         // debugging
-        printLines();
+        // printLines();
     }
 
 }

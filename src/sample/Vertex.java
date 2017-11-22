@@ -21,35 +21,42 @@ public class Vertex {
         homogeneousCoordinate = 1.0;
     }
 
-    public Double getxCoordinate() {
+    public Vertex(Double x, Double y, Double z, Double h) {
+        xCoordinate = x;
+        yCoordinate = y;
+        zCoordinate = z;
+        homogeneousCoordinate = h;
+    }
+
+    public Double getX() {
         return xCoordinate;
     }
 
-    public void setXCoordinate(Double x) {
+    public void setX(Double x) {
         xCoordinate = x;
     }
 
-    public Double getyCoordinate() {
+    public Double getY() {
         return yCoordinate;
     }
 
-    public void setyCoordinate(Double y) {
+    public void setY(Double y) {
         yCoordinate = y;
     }
 
-    public Double getzCoordinate() {
+    public Double getZ() {
         return zCoordinate;
     }
 
-    public void setzCoordinate(Double z) {
+    public void setZ(Double z) {
         zCoordinate = z;
     }
 
-    public Double getHomogeneousCoordinate() {
+    public Double getH() {
         return homogeneousCoordinate;
     }
 
-    public void setHomogeneousCoordinate(Double h) {
+    public void setH(Double h) {
         homogeneousCoordinate = h;
     }
 
