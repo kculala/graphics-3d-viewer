@@ -22,6 +22,8 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.List;
 
+import static sample.Matrix.multiplyMatrix;
+
 public class Main extends Application {
 
     private static final int WIDTH = 600;
@@ -96,9 +98,9 @@ public class Main extends Application {
         }
     }
 
-    private List<Vertex> initialShape = new ArrayList<>();
-    private List<Vertex> currentShape = new ArrayList<>();
-    private List<Vertex> tNet = new ArrayList<>();
+    private Matrix initialShape = new Matrix();
+    private Matrix currentShape = new Matrix();
+    private Matrix tNet = new Matrix();
     private List<Pair> lines = new ArrayList<>();
 
     @Override
@@ -122,7 +124,7 @@ public class Main extends Application {
         canvas.heightProperty().bind(wrapper.heightProperty());
 
         GraphicsContext gc = canvas.getGraphicsContext2D();
-        initTNet();
+        tNet = new TransformationMatrix();
 
         // toolbar
         Image imageLeft = new Image(new FileInputStream(ImagePaths.TRANSLATE_LEFT.toString()));
@@ -220,7 +222,7 @@ public class Main extends Application {
         buttonRestore.setOnAction(e -> {
             clearScreen(gc, canvas);
             currentShape = initialShape;
-            initTNet();
+            tNet = new Matrix();
             draw(gc);
         });
 
@@ -286,56 +288,6 @@ public class Main extends Application {
         primaryStage.show();
     }
 
-    private void initTNet() {
-        tNet = new ArrayList<>();
-        Vertex r1 = new Vertex(1.0,0.0,0.0, 0.0);
-        Vertex r2 = new Vertex(0.0,1.0,0.0, 0.0);
-        Vertex r3 = new Vertex(0.0,0.0,1.0, 0.0);
-        Vertex r4 = new Vertex(0.0, 0.0,0.0, 1.0);
-        tNet.addAll(Arrays.asList(r1, r2, r3, r4));
-    }
-
-    private List<Vertex> multiplyMatrix(List<Vertex> matrixA, List<Vertex> matrixB) {
-        List<Vertex> matrixC = new ArrayList<>();
-        for (Vertex row : matrixA) {
-            Vertex vertex = new Vertex();
-            Double x = (row.getX() * matrixB.get(0).getX()) +
-                       (row.getY() * matrixB.get(1).getX()) +
-                       (row.getZ() * matrixB.get(2).getX()) +
-                       (row.getH() * matrixB.get(3).getX());
-            Double y = (row.getX() * matrixB.get(0).getY()) +
-                       (row.getY() * matrixB.get(1).getY()) +
-                       (row.getZ() * matrixB.get(2).getY()) +
-                       (row.getH() * matrixB.get(3).getY());
-            Double z = (row.getX() * matrixB.get(0).getZ()) +
-                       (row.getY() * matrixB.get(1).getZ()) +
-                       (row.getZ() * matrixB.get(2).getZ()) +
-                       (row.getH() * matrixB.get(3).getZ());
-            Double h = (row.getX() * matrixB.get(0).getH()) +
-                       (row.getY() * matrixB.get(1).getH()) +
-                       (row.getZ() * matrixB.get(2).getH()) +
-                       (row.getH() * matrixB.get(3).getH());
-            vertex.setX(x);
-            vertex.setY(y);
-            vertex.setZ(z);
-            vertex.setH(h);
-            matrixC.add(vertex);
-        }
-        return matrixC;
-    }
-
-    private void translate(Double xShift, Double yShift, Double zShift) {
-        List<Vertex> translationMatrix = new ArrayList<>();
-        Vertex r1 = new Vertex(1.0,0.0,0.0, 0.0);
-        Vertex r2 = new Vertex(0.0,1.0,0.0, 0.0);
-        Vertex r3 = new Vertex(0.0,0.0,1.0, 0.0);
-        Vertex r4 = new Vertex(xShift, yShift,zShift, 1.0);
-        translationMatrix.addAll(Arrays.asList(r1, r2, r3, r4));
-        tNet = multiplyMatrix(translationMatrix, tNet);
-        currentShape = multiplyMatrix(currentShape, tNet);
-        printVertices();
-    }
-
     private void clearScreen(GraphicsContext gc, Canvas canvas) {
         gc.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
     }
@@ -345,20 +297,17 @@ public class Main extends Application {
         gc.setLineWidth(1);
         for (Pair tmp : this.lines) {
 
-            double x1 = this.currentShape.get((int)tmp.getKey()).getX() + SHAPE_WIDTH_OFFSET;
-            double y1 = (this.currentShape.get((int)tmp.getKey()).getY() * -1) + SHAPE_HEIGHT_OFFSET;
-            double x2 = this.currentShape.get((int)tmp.getValue()).getX() + SHAPE_WIDTH_OFFSET;
-            double y2 = (this.currentShape.get((int)tmp.getValue()).getY() * -1) + SHAPE_HEIGHT_OFFSET;
+            double x1 = this.currentShape.getRow((int)tmp.getKey()).getX() + SHAPE_WIDTH_OFFSET;
+            double y1 = (this.currentShape.getRow((int)tmp.getKey()).getY() * -1) + SHAPE_HEIGHT_OFFSET;
+            double x2 = this.currentShape.getRow((int)tmp.getValue()).getX() + SHAPE_WIDTH_OFFSET;
+            double y2 = (this.currentShape.getRow((int)tmp.getValue()).getY() * -1) + SHAPE_HEIGHT_OFFSET;
 
             // debugging
             // System.out.print(tmp.toString() + " | " + x1 + " " + y1 + " " + x2 + " " + y2 + "\n");
 
             gc.strokeLine(x1, y1, x2, y2);
+            tNet = new TransformationMatrix();
         }
-    }
-
-    public static void main(String[] args) {
-        launch(args);
     }
 
     private static void configureFileChooser(final FileChooser fileChooser, boolean isSelectingVertices) {
@@ -388,21 +337,15 @@ public class Main extends Application {
         return vertex;
     }
 
-    private void printVertices() {
-        for (Vertex temp : this.currentShape) {
-            System.out.println(temp.toString());
-        }
-    }
-
     private void openVerticesFile(File file) {
-        List<Vertex> vertices = new ArrayList<>();
+        Matrix vertices = new Matrix();
         try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 Vertex tmp = parseVertexRow(line);
                 if (tmp == null)
                     break;
-                vertices.add(tmp);
+                vertices.addRow(tmp);
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -412,7 +355,7 @@ public class Main extends Application {
         this.currentShape = this.initialShape;
 
         // debugging
-        // printVertices();
+        //System.out.println(vertices);
     }
 
     private Pair<Integer, Integer> parseLineRow(String line) {
@@ -449,6 +392,19 @@ public class Main extends Application {
 
         // debugging
         // printLines();
+    }
+
+    private void translate(Double xShift, Double yShift, Double zShift) {
+        Matrix translationMatrix = new TransformationMatrix();
+        Vertex r4 = new Vertex(xShift, yShift, zShift, 1.0);
+        translationMatrix.setRow(translationMatrix.size() - 1, r4);
+        tNet = multiplyMatrix(translationMatrix, tNet);
+        currentShape = multiplyMatrix(currentShape, tNet);
+        System.out.println(currentShape);
+    }
+
+    public static void main(String[] args) {
+        launch(args);
     }
 
 }
