@@ -28,13 +28,7 @@ public class Main extends Application {
 
     private static final int WIDTH = 600;
     private static final int HEIGHT = 600;
-    private static final int GRID_SPACING = 10;
-    private static final int SHAPE_DIMENSION = 20;
-    private static final int SHAPE_DIMENSION_SCALED = SHAPE_DIMENSION * GRID_SPACING ;
-
-    // offset to center of pane
-    private static final int SHAPE_WIDTH_OFFSET = (WIDTH/2) - (SHAPE_DIMENSION_SCALED/2);
-    private static final int SHAPE_HEIGHT_OFFSET = (HEIGHT/2) - (SHAPE_DIMENSION_SCALED/2) + SHAPE_DIMENSION_SCALED;
+    private static final double SHAPE_DIMENSION = 20.0;
 
     private static final String SCENE_TITLE = "COMP 4560 Assignment 5 - A00797801";
     private static final String USAGE_TITLE = "Usage";
@@ -98,15 +92,18 @@ public class Main extends Application {
         }
     }
 
-    private Matrix initialShape = new Matrix();
-    private Matrix currentShape = new Matrix();
+    // initial points
+    private Matrix initialPoints = new Matrix();
+    // cumulative transformation matrix
     private Matrix tNet = new Matrix();
     private List<Pair> lines = new ArrayList<>();
+    private Canvas canvas;
 
     @Override
     public void start(Stage primaryStage) throws Exception{
 
         primaryStage.setTitle(SCENE_TITLE);
+        primaryStage.setMaximized(true);
         Group root = new Group();
         Scene scene = new Scene(root, WIDTH, HEIGHT, Color.BLACK);
 
@@ -118,12 +115,15 @@ public class Main extends Application {
 
         // canvas
         Pane wrapper = new Pane();
-        Canvas canvas = new Canvas();
+        canvas = new Canvas();
         wrapper.getChildren().add(canvas);
         canvas.widthProperty().bind(wrapper.widthProperty());
         canvas.heightProperty().bind(wrapper.heightProperty());
 
         GraphicsContext gc = canvas.getGraphicsContext2D();
+        gc.setStroke(Color.WHITE);
+        gc.setLineWidth(1);
+
         tNet = new TransformationMatrix();
 
         // toolbar
@@ -133,8 +133,7 @@ public class Main extends Application {
         Tooltip tooltipLeft = new Tooltip(Tooltips.TRANSLATE_LEFT.toString());
         buttonTranslateLeft.setTooltip(tooltipLeft);
         buttonTranslateLeft.setOnAction(e -> {
-            clearScreen(gc, canvas);
-            translate(-10.0, 0.0, 0.0);
+            translate(-75.0, 0.0, 0.0);
             draw(gc);
         });
 
@@ -144,8 +143,7 @@ public class Main extends Application {
         Tooltip tooltipRight = new Tooltip(Tooltips.TRANSLATE_RIGHT.toString());
         buttonTranslateRight.setTooltip(tooltipRight);
         buttonTranslateRight.setOnAction(e -> {
-            clearScreen(gc, canvas);
-            translate(10.0, 0.0, 0.0);
+            translate(75.0, 0.0, 0.0);
             draw(gc);
         });
 
@@ -155,8 +153,7 @@ public class Main extends Application {
         Tooltip tooltipUp = new Tooltip(Tooltips.TRANSLATE_UP.toString());
         buttonTranslateUp.setTooltip(tooltipUp);
         buttonTranslateUp.setOnAction(e -> {
-            clearScreen(gc, canvas);
-            translate(0.0, 10.0, 0.0);
+            translate(0.0, -35.0, 0.0);
             draw(gc);
         });
 
@@ -166,8 +163,9 @@ public class Main extends Application {
         Tooltip tooltipDown = new Tooltip(Tooltips.TRANSLATE_DOWN.toString());
         buttonTranslateDown.setTooltip(tooltipDown);
         buttonTranslateDown.setOnAction(e -> {
-            clearScreen(gc, canvas);
-            translate(0.0, -10.0, 0.0);
+            System.out.println("BEFORE\n" + tNet);
+            translate(0.0, 35.0, 0.0);
+            System.out.println("AFTER\n" + tNet);
             draw(gc);
         });
 
@@ -176,12 +174,20 @@ public class Main extends Application {
         buttonScaleUp.setGraphic(new ImageView(imageScaleUp));
         Tooltip tooltipScaleUp = new Tooltip(Tooltips.SCALE_UP.toString());
         buttonScaleUp.setTooltip(tooltipScaleUp);
+        buttonScaleUp.setOnAction(e -> {
+            scale(1.1, 1.1, 1.0);
+            draw(gc);
+        });
 
         Image imageScaleDown = new Image(new FileInputStream(ImagePaths.SCALE_DOWN.toString()));
         Button buttonScaleDown = new Button();
         buttonScaleDown.setGraphic(new ImageView(imageScaleDown));
         Tooltip tooltipScaleDown = new Tooltip(Tooltips.SCALE_DOWN.toString());
         buttonScaleDown.setTooltip(tooltipScaleDown);
+        buttonScaleDown.setOnAction(e -> {
+            scale(0.9, 0.9, 1.0);
+            draw(gc);
+        });
 
         Image imageRotateX = new Image(new FileInputStream(ImagePaths.ROTATE_X.toString()));
         Button buttonRotateX = new Button();
@@ -220,9 +226,7 @@ public class Main extends Application {
         buttonRestore.setTooltip(tooltipRestore);
 
         buttonRestore.setOnAction(e -> {
-            clearScreen(gc, canvas);
-            currentShape = initialShape;
-            tNet = new Matrix();
+            initShape();
             draw(gc);
         });
 
@@ -269,6 +273,7 @@ public class Main extends Application {
                     }
 
                     if (verticesFile != null && linesFile != null) {
+                        initShape();
                         draw(gc);
                     }
                 }
@@ -288,25 +293,37 @@ public class Main extends Application {
         primaryStage.show();
     }
 
-    private void clearScreen(GraphicsContext gc, Canvas canvas) {
-        gc.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
+    private void initShape() {
+
+        System.out.println("INITIAL\n" + multiplyMatrix(initialPoints, tNet));
+
+        reflectY();
+        System.out.println("AFTER REFLECT\n" + multiplyMatrix(initialPoints, tNet));
+
+        // move to 0, 0
+        translate(0.0, SHAPE_DIMENSION, 0.0);
+        System.out.println("AFTER TRANSLATE\n" + multiplyMatrix(initialPoints, tNet));
+
+        // scale shape to make half the height of the canvas
+        double scaleFactor = ((canvas.getHeight()/2) * SHAPE_DIMENSION)/(canvas.getHeight()/2);
+        scale(scaleFactor, scaleFactor, 1.0);
+        System.out.println("AFTER TRANSLATE\n" + multiplyMatrix(initialPoints, tNet));
+
+        double xMiddle = (canvas.getWidth() - (SHAPE_DIMENSION * scaleFactor))/2;
+        double yMiddle = (canvas.getHeight() - (SHAPE_DIMENSION * scaleFactor))/2;
+        translate(xMiddle, yMiddle, 0.0);
+        System.out.println("AFTER TRANSLATE\n" + multiplyMatrix(initialPoints, tNet));
     }
 
     private void draw(GraphicsContext gc) {
-        gc.setStroke(Color.WHITE);
-        gc.setLineWidth(1);
+        gc.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
+        Matrix screenPoints = multiplyMatrix(initialPoints, tNet);
         for (Pair tmp : this.lines) {
-
-            double x1 = this.currentShape.getRow((int)tmp.getKey()).getX() + SHAPE_WIDTH_OFFSET;
-            double y1 = (this.currentShape.getRow((int)tmp.getKey()).getY() * -1) + SHAPE_HEIGHT_OFFSET;
-            double x2 = this.currentShape.getRow((int)tmp.getValue()).getX() + SHAPE_WIDTH_OFFSET;
-            double y2 = (this.currentShape.getRow((int)tmp.getValue()).getY() * -1) + SHAPE_HEIGHT_OFFSET;
-
-            // debugging
-            // System.out.print(tmp.toString() + " | " + x1 + " " + y1 + " " + x2 + " " + y2 + "\n");
-
+            double x1 = screenPoints.getRow((int)tmp.getKey()).getX();
+            double y1 = screenPoints.getRow((int)tmp.getKey()).getY();
+            double x2 = screenPoints.getRow((int)tmp.getValue()).getX();
+            double y2 = screenPoints.getRow((int)tmp.getValue()).getY();
             gc.strokeLine(x1, y1, x2, y2);
-            tNet = new TransformationMatrix();
         }
     }
 
@@ -328,9 +345,9 @@ public class Main extends Application {
         if(tokens.length != 3)
             return null;
         Vertex vertex = new Vertex();
-        Double x = Double.parseDouble(tokens[0]) * GRID_SPACING;
-        Double y = Double.parseDouble(tokens[1]) * GRID_SPACING;
-        Double z = Double.parseDouble(tokens[2]) * GRID_SPACING;
+        Double x = Double.parseDouble(tokens[0]);
+        Double y = Double.parseDouble(tokens[1]);
+        Double z = Double.parseDouble(tokens[2]);
         vertex.setX(x);
         vertex.setY(y);
         vertex.setZ(z);
@@ -351,11 +368,7 @@ public class Main extends Application {
             e.printStackTrace();
         }
 
-        this.initialShape = vertices;
-        this.currentShape = this.initialShape;
-
-        // debugging
-        //System.out.println(vertices);
+        this.initialPoints = vertices;
     }
 
     private Pair<Integer, Integer> parseLineRow(String line) {
@@ -398,9 +411,25 @@ public class Main extends Application {
         Matrix translationMatrix = new TransformationMatrix();
         Vertex r4 = new Vertex(xShift, yShift, zShift, 1.0);
         translationMatrix.setRow(translationMatrix.size() - 1, r4);
-        tNet = multiplyMatrix(translationMatrix, tNet);
-        currentShape = multiplyMatrix(currentShape, tNet);
-        System.out.println(currentShape);
+        tNet = multiplyMatrix(tNet, translationMatrix);
+    }
+
+    private void reflectY() {
+        Matrix reflectMatrix = new TransformationMatrix();
+        Vertex r2 = new Vertex(0.0, -1.0, 0.0, 0.0);
+        reflectMatrix.setRow(1, r2);
+        tNet = multiplyMatrix(tNet, reflectMatrix);
+    }
+
+    private void scale(Double xScale, Double yScale, Double zScale) {
+        Matrix scalingMatrix = new TransformationMatrix();
+        Vertex r1 = new Vertex(xScale, 0.0, 0.0, 0.0);
+        Vertex r2 = new Vertex(0.0, yScale, 0.0, 0.0);
+        Vertex r3 = new Vertex(0.0, 0.0, zScale, 0.0);
+        scalingMatrix.setRow(0, r1);
+        scalingMatrix.setRow(1, r2);
+        scalingMatrix.setRow(2, r3);
+        tNet = multiplyMatrix(tNet, scalingMatrix);
     }
 
     public static void main(String[] args) {
