@@ -99,6 +99,8 @@ public class Main extends Application {
     private List<Pair> lines = new ArrayList<>();
     private Canvas canvas;
 
+    private double scaleFactor;
+
     @Override
     public void start(Stage primaryStage) throws Exception{
 
@@ -123,8 +125,6 @@ public class Main extends Application {
         GraphicsContext gc = canvas.getGraphicsContext2D();
         gc.setStroke(Color.WHITE);
         gc.setLineWidth(1);
-
-        tNet = new TransformationMatrix();
 
         // toolbar
         Image imageLeft = new Image(new FileInputStream(ImagePaths.TRANSLATE_LEFT.toString()));
@@ -163,9 +163,7 @@ public class Main extends Application {
         Tooltip tooltipDown = new Tooltip(Tooltips.TRANSLATE_DOWN.toString());
         buttonTranslateDown.setTooltip(tooltipDown);
         buttonTranslateDown.setOnAction(e -> {
-            System.out.println("BEFORE\n" + tNet);
             translate(0.0, 35.0, 0.0);
-            System.out.println("AFTER\n" + tNet);
             draw(gc);
         });
 
@@ -175,7 +173,21 @@ public class Main extends Application {
         Tooltip tooltipScaleUp = new Tooltip(Tooltips.SCALE_UP.toString());
         buttonScaleUp.setTooltip(tooltipScaleUp);
         buttonScaleUp.setOnAction(e -> {
+            // calculate middle of shape on canvas
+            double xMiddle = (canvas.getWidth() - (SHAPE_DIMENSION * scaleFactor))/2;
+            double yMiddle = (canvas.getHeight() - (SHAPE_DIMENSION * scaleFactor))/2;
+            // offset top left point of shape by half of size
+            xMiddle += SHAPE_DIMENSION/2 * scaleFactor;
+            yMiddle += SHAPE_DIMENSION/2 * scaleFactor;
+
+            // move middle of shape to 0, 0
+            translate(-xMiddle, -yMiddle, 0.0);
+
             scale(1.1, 1.1, 1.0);
+
+            // move shape back
+            translate(xMiddle, yMiddle, 0.0);
+
             draw(gc);
         });
 
@@ -185,7 +197,21 @@ public class Main extends Application {
         Tooltip tooltipScaleDown = new Tooltip(Tooltips.SCALE_DOWN.toString());
         buttonScaleDown.setTooltip(tooltipScaleDown);
         buttonScaleDown.setOnAction(e -> {
+            // calculate middle of shape
+            double xMiddle = (canvas.getWidth() - (SHAPE_DIMENSION * scaleFactor))/2;
+            double yMiddle = (canvas.getHeight() - (SHAPE_DIMENSION * scaleFactor))/2;
+            // offset top left point of shape by half of size
+            xMiddle += SHAPE_DIMENSION/2 * scaleFactor;
+            yMiddle += SHAPE_DIMENSION/2 * scaleFactor;
+
+            // move middle of shape to 0,0
+            translate(-xMiddle, -yMiddle, 0.0);
+
             scale(0.9, 0.9, 1.0);
+
+            // move shape back
+            translate(xMiddle, yMiddle, 0.0);
+
             draw(gc);
         });
 
@@ -294,25 +320,21 @@ public class Main extends Application {
     }
 
     private void initShape() {
-
-        System.out.println("INITIAL\n" + multiplyMatrix(initialPoints, tNet));
+        tNet = new TransformationMatrix();
 
         reflectY();
-        System.out.println("AFTER REFLECT\n" + multiplyMatrix(initialPoints, tNet));
 
         // move to 0, 0
         translate(0.0, SHAPE_DIMENSION, 0.0);
-        System.out.println("AFTER TRANSLATE\n" + multiplyMatrix(initialPoints, tNet));
 
-        // scale shape to make half the height of the canvas
-        double scaleFactor = ((canvas.getHeight()/2) * SHAPE_DIMENSION)/(canvas.getHeight()/2);
+        // scale shape up to half the height of the canvas
+        this.scaleFactor = ((canvas.getHeight()/2) * SHAPE_DIMENSION)/(canvas.getHeight()/2);
         scale(scaleFactor, scaleFactor, 1.0);
-        System.out.println("AFTER TRANSLATE\n" + multiplyMatrix(initialPoints, tNet));
 
+        // move shape to center of canvas
         double xMiddle = (canvas.getWidth() - (SHAPE_DIMENSION * scaleFactor))/2;
         double yMiddle = (canvas.getHeight() - (SHAPE_DIMENSION * scaleFactor))/2;
         translate(xMiddle, yMiddle, 0.0);
-        System.out.println("AFTER TRANSLATE\n" + multiplyMatrix(initialPoints, tNet));
     }
 
     private void draw(GraphicsContext gc) {
