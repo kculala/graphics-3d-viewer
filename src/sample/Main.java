@@ -29,6 +29,7 @@ public class Main extends Application {
     private static final int WIDTH = 600;
     private static final int HEIGHT = 600;
     private static final double SHAPE_DIMENSION = 20.0;
+    private static final double ROTATION_FACTOR = 0.1;
 
     private static final String SCENE_TITLE = "COMP 4560 Assignment 5 - A00797801";
     private static final String USAGE_TITLE = "Usage";
@@ -183,7 +184,7 @@ public class Main extends Application {
             // move middle of shape to 0, 0
             translate(-xMiddle, -yMiddle, 0.0);
 
-            scale(1.1, 1.1, 1.0);
+            scale(1.1, 1.1, 1.1);
 
             // move shape back
             translate(xMiddle, yMiddle, 0.0);
@@ -207,7 +208,7 @@ public class Main extends Application {
             // move middle of shape to 0,0
             translate(-xMiddle, -yMiddle, 0.0);
 
-            scale(0.9, 0.9, 1.0);
+            scale(0.9, 0.9, 0.9);
 
             // move shape back
             translate(xMiddle, yMiddle, 0.0);
@@ -220,18 +221,78 @@ public class Main extends Application {
         buttonRotateX.setGraphic(new ImageView(imageRotateX));
         Tooltip tooltipRotateX = new Tooltip(Tooltips.ROTATE_X.toString());
         buttonRotateX.setTooltip(tooltipRotateX);
+        buttonRotateX.setOnAction(e -> {
+            // calculate middle of shape on canvas
+            double xMiddle = (canvas.getWidth() - (SHAPE_DIMENSION * scaleFactor))/2;
+            double yMiddle = (canvas.getHeight() - (SHAPE_DIMENSION * scaleFactor))/2;
+            // offset top left point of shape by half of size
+            xMiddle += SHAPE_DIMENSION/2 * scaleFactor;
+            yMiddle += SHAPE_DIMENSION/2 * scaleFactor;
+            double zOffset =  SHAPE_DIMENSION/2 * scaleFactor;
+
+            // move middle of shape to 0, 0
+            translate(-xMiddle, -yMiddle, -zOffset);
+
+            // rotate
+            rotateX();
+
+            // move shape back
+            translate(xMiddle, yMiddle, zOffset);
+
+            draw(gc);
+        });
 
         Image imageRotateY = new Image(new FileInputStream(ImagePaths.ROTATE_Y.toString()));
         Button buttonRotateY = new Button();
         buttonRotateY.setGraphic(new ImageView(imageRotateY));
         Tooltip tooltipRotateY = new Tooltip(Tooltips.ROTATE_Y.toString());
         buttonRotateY.setTooltip(tooltipRotateY);
+        buttonRotateY.setOnAction(e -> {
+            // calculate middle of shape on canvas
+            double xMiddle = (canvas.getWidth() - (SHAPE_DIMENSION * scaleFactor))/2;
+            double yMiddle = (canvas.getHeight() - (SHAPE_DIMENSION * scaleFactor))/2;
+            // offset top left point of shape by half of size
+            xMiddle += SHAPE_DIMENSION/2 * scaleFactor;
+            yMiddle += SHAPE_DIMENSION/2 * scaleFactor;
+            double zOffset =  SHAPE_DIMENSION/2 * scaleFactor;
+
+            // move middle of shape to 0, 0
+            translate(-xMiddle, -yMiddle, -zOffset);
+
+            // rotate
+            rotateY();
+
+            // move shape back
+            translate(xMiddle, yMiddle, zOffset);
+
+            draw(gc);
+        });
 
         Image imageRotateZ = new Image(new FileInputStream(ImagePaths.ROTATE_Z.toString()));
         Button buttonRotateZ = new Button();
         buttonRotateZ.setGraphic(new ImageView(imageRotateZ));
         Tooltip tooltipRotateZ = new Tooltip(Tooltips.ROTATE_Z.toString());
         buttonRotateZ.setTooltip(tooltipRotateZ);
+        buttonRotateZ.setOnAction(e -> {
+            // calculate middle of shape on canvas
+            double xMiddle = (canvas.getWidth() - (SHAPE_DIMENSION * scaleFactor))/2;
+            double yMiddle = (canvas.getHeight() - (SHAPE_DIMENSION * scaleFactor))/2;
+            // offset top left point of shape by half of size
+            xMiddle += SHAPE_DIMENSION/2 * scaleFactor;
+            yMiddle += SHAPE_DIMENSION/2 * scaleFactor;
+            double zOffset =  SHAPE_DIMENSION/2 * scaleFactor;
+
+            // move middle of shape to 0, 0
+            translate(-xMiddle, -yMiddle, -zOffset);
+
+            // rotate
+            rotateZ();
+
+            // move shape back
+            translate(xMiddle, yMiddle, zOffset);
+
+            draw(gc);
+        });
 
         Image imageShearLeft = new Image(new FileInputStream(ImagePaths.SHEAR_LEFT.toString()));
         Button buttonShearLeft = new Button();
@@ -329,7 +390,7 @@ public class Main extends Application {
 
         // scale shape up to half the height of the canvas
         this.scaleFactor = ((canvas.getHeight()/2) * SHAPE_DIMENSION)/(canvas.getHeight()/2);
-        scale(scaleFactor, scaleFactor, 1.0);
+        scale(scaleFactor, scaleFactor, scaleFactor);
 
         // move shape to center of canvas
         double xMiddle = (canvas.getWidth() - (SHAPE_DIMENSION * scaleFactor))/2;
@@ -452,6 +513,33 @@ public class Main extends Application {
         scalingMatrix.setRow(1, r2);
         scalingMatrix.setRow(2, r3);
         tNet = multiplyMatrix(tNet, scalingMatrix);
+    }
+
+    private void rotateX() {
+        Matrix rotationMatrix = new TransformationMatrix();
+        Vertex r1 = new Vertex(Math.cos(ROTATION_FACTOR), Math.sin(ROTATION_FACTOR), 0.0, 0.0);
+        Vertex r2 = new Vertex(-Math.sin(ROTATION_FACTOR), Math.cos(ROTATION_FACTOR), 0.0, 0.0);
+        rotationMatrix.setRow(0, r1);
+        rotationMatrix.setRow(1, r2);
+        tNet = multiplyMatrix(tNet, rotationMatrix);
+    }
+
+    private void rotateY() {
+        Matrix rotationMatrix = new TransformationMatrix();
+        Vertex r1 = new Vertex(Math.cos(ROTATION_FACTOR), 0.0, -Math.sin(ROTATION_FACTOR), 0.0);
+        Vertex r3 = new Vertex(Math.sin(ROTATION_FACTOR), 0.0, Math.cos(ROTATION_FACTOR), 0.0);
+        rotationMatrix.setRow(0, r1);
+        rotationMatrix.setRow(2, r3);
+        tNet = multiplyMatrix(tNet, rotationMatrix);
+    }
+
+    private void rotateZ() {
+        Matrix rotationMatrix = new TransformationMatrix();
+        Vertex r2 = new Vertex(0.0, Math.cos(ROTATION_FACTOR), Math.sin(ROTATION_FACTOR), 0.0);
+        Vertex r3 = new Vertex(0.0, -Math.sin(ROTATION_FACTOR), Math.cos(ROTATION_FACTOR), 0.0);
+        rotationMatrix.setRow(1, r2);
+        rotationMatrix.setRow(2, r3);
+        tNet = multiplyMatrix(tNet, rotationMatrix);
     }
 
     public static void main(String[] args) {
