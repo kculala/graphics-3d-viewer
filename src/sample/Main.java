@@ -97,6 +97,8 @@ public class Main extends Application {
     private Matrix initialPoints = new Matrix();
     // cumulative transformation matrix
     private Matrix tNet = new Matrix();
+    // points used to render shape at any given moment.
+    private Matrix currentPoints = new Matrix();
     private List<Pair> lines = new ArrayList<>();
     private Canvas canvas;
 
@@ -173,13 +175,9 @@ public class Main extends Application {
         buttonScaleUp.setTooltip(tooltipScaleUp);
         buttonScaleUp.setOnAction(e -> {
             // calculate middle of shape
-            double xMiddle = tNet.getRow(3).getX();
-            double yMiddle = tNet.getRow(3).getY();
-            double zMiddle = tNet.getRow(3).getZ();
-            // offset top left point of shape by half of size
-            xMiddle += SHAPE_DIMENSION/2 * Math.abs(tNet.getRow(0).getX());
-            yMiddle -= SHAPE_DIMENSION/2 * Math.abs(tNet.getRow(1).getY());
-            zMiddle += SHAPE_DIMENSION/2 * Math.abs(tNet.getRow(2).getZ());
+            double xMiddle = currentPoints.getRow(0).getX();
+            double yMiddle = currentPoints.getRow(0).getY();
+            double zMiddle = currentPoints.getRow(0).getZ();
 
             // move middle of shape to 0, 0
             translate(-xMiddle, -yMiddle, -zMiddle);
@@ -199,13 +197,9 @@ public class Main extends Application {
         buttonScaleDown.setTooltip(tooltipScaleDown);
         buttonScaleDown.setOnAction(e -> {
             // calculate middle of shape
-            double xMiddle = tNet.getRow(3).getX();
-            double yMiddle = tNet.getRow(3).getY();
-            double zMiddle = tNet.getRow(3).getZ();
-            // offset top left point of shape by half of size
-            xMiddle += SHAPE_DIMENSION/2 * Math.abs(tNet.getRow(0).getX());
-            yMiddle -= SHAPE_DIMENSION/2 * Math.abs(tNet.getRow(1).getY());
-            zMiddle += SHAPE_DIMENSION/2 * Math.abs(tNet.getRow(2).getZ());
+            double xMiddle = currentPoints.getRow(0).getX();
+            double yMiddle = currentPoints.getRow(0).getY();
+            double zMiddle = currentPoints.getRow(0).getZ();
 
             // move middle of shape to 0,0
             translate(-xMiddle, -yMiddle, -zMiddle);
@@ -224,23 +218,16 @@ public class Main extends Application {
         Tooltip tooltipRotateX = new Tooltip(Tooltips.ROTATE_X.toString());
         buttonRotateX.setTooltip(tooltipRotateX);
         buttonRotateX.setOnAction(e -> {
-            System.out.println("ORIGINAL\n" + multiplyMatrix(initialPoints, tNet));
             // calculate middle of shape
-            double xMiddle = tNet.getRow(3).getX();
-            double yMiddle = tNet.getRow(3).getY();
-//            double zMiddle = tNet.getRow(3).getZ();
-            // offset top left point of shape by half of size
-            xMiddle += SHAPE_DIMENSION/2 * Math.abs(tNet.getRow(0).getX());
-            yMiddle -= SHAPE_DIMENSION/2 * Math.abs(tNet.getRow(1).getY());
-            double zMiddle = SHAPE_DIMENSION/2 * Math.abs(tNet.getRow(2).getZ());
+            double xMiddle = currentPoints.getRow(0).getX();
+            double yMiddle = currentPoints.getRow(0).getY();
+            double zMiddle = currentPoints.getRow(0).getZ();
 
             // move middle of shape to 0, 0
-//            translate(-xMiddle, -yMiddle, -zMiddle);
-            System.out.println("MOVE TO ORIGIN\n" + multiplyMatrix(initialPoints, tNet));
+            translate(-xMiddle, -yMiddle, -zMiddle);
 
             // rotate
             rotateX();
-//            System.out.println("ROTATE\n" + multiplyMatrix(initialPoints, tNet));
 
             // move shape back
             translate(xMiddle, yMiddle, zMiddle);
@@ -255,21 +242,18 @@ public class Main extends Application {
         buttonRotateY.setTooltip(tooltipRotateY);
         buttonRotateY.setOnAction(e -> {
             // calculate middle of shape
-            double xMiddle = tNet.getRow(3).getX();
-            double yMiddle = tNet.getRow(3).getY();
-            // offset top left point of shape by half of size
-            xMiddle += SHAPE_DIMENSION/2 * Math.abs(tNet.getRow(0).getX());
-            yMiddle -= SHAPE_DIMENSION/2 * Math.abs(tNet.getRow(0).getX());
-            double zOffset =  SHAPE_DIMENSION/2 * Math.abs(tNet.getRow(0).getX());
+            double xMiddle = currentPoints.getRow(0).getX();
+            double yMiddle = currentPoints.getRow(0).getY();
+            double zMiddle = currentPoints.getRow(0).getZ();
 
             // move middle of shape to 0, 0
-            translate(-xMiddle, -yMiddle, -zOffset);
+            translate(-xMiddle, -yMiddle, -zMiddle);
 
             // rotate
             rotateY();
 
             // move shape back
-            translate(xMiddle, yMiddle, zOffset);
+            translate(xMiddle, yMiddle, zMiddle);
 
             draw(gc);
         });
@@ -280,14 +264,9 @@ public class Main extends Application {
         Tooltip tooltipRotateZ = new Tooltip(Tooltips.ROTATE_Z.toString());
         buttonRotateZ.setTooltip(tooltipRotateZ);
         buttonRotateZ.setOnAction(e -> {
-            // calculate middle of shape
-            double xMiddle = tNet.getRow(3).getX();
-            double yMiddle = tNet.getRow(3).getY();
-            double zMiddle = tNet.getRow(3).getZ();
-            // offset top left point of shape by half of size
-            xMiddle += SHAPE_DIMENSION/2 * Math.abs(tNet.getRow(0).getX());
-            yMiddle -= SHAPE_DIMENSION * Math.abs(tNet.getRow(1).getY());
-            zMiddle += SHAPE_DIMENSION/2 * Math.abs(tNet.getRow(2).getZ());
+            double xMiddle = currentPoints.getRow(0).getX();
+            double yMiddle = currentPoints.getRow(0).getY();
+            double zMiddle = currentPoints.getRow(0).getZ();
 
             // move middle of shape to 0, 0
             translate(-xMiddle, -yMiddle, -zMiddle);
@@ -296,7 +275,7 @@ public class Main extends Application {
             rotateZ();
 
             // move shape back
-            translate(xMiddle, yMiddle, 0.0);
+            translate(xMiddle, yMiddle, zMiddle);
 
             draw(gc);
         });
@@ -389,11 +368,12 @@ public class Main extends Application {
 
     private void initShape() {
         tNet = new TransformationMatrix();
+        currentPoints = initialPoints;
 
         reflectY();
 
         // move to 0, 0
-        translate(-SHAPE_DIMENSION/2, SHAPE_DIMENSION/2, -SHAPE_DIMENSION/2);
+        translate(-SHAPE_DIMENSION/2, SHAPE_DIMENSION/2, 0.0);
 
         // scale shape up to half the height of the canvas
         double scaleFactor = ((canvas.getHeight()/2) * SHAPE_DIMENSION)/(canvas.getHeight()/2);
@@ -402,20 +382,20 @@ public class Main extends Application {
         // move shape to center of canvas
         double xMiddle = canvas.getWidth()/2;
         double yMiddle = canvas.getHeight()/2;
-        double ZMiddle = canvas.getHeight()/2;
-        translate(xMiddle, yMiddle, ZMiddle);
+        translate(xMiddle, yMiddle, 0.0);
     }
 
     private void draw(GraphicsContext gc) {
         gc.clearRect(0, 0, canvas.getWidth(), canvas.getHeight());
-        Matrix screenPoints = multiplyMatrix(initialPoints, tNet);
+        currentPoints = multiplyMatrix(currentPoints, tNet);
         for (Pair tmp : this.lines) {
-            double x1 = screenPoints.getRow((int)tmp.getKey()).getX();
-            double y1 = screenPoints.getRow((int)tmp.getKey()).getY();
-            double x2 = screenPoints.getRow((int)tmp.getValue()).getX();
-            double y2 = screenPoints.getRow((int)tmp.getValue()).getY();
+            double x1 = currentPoints.getRow((int)tmp.getKey()).getX();
+            double y1 = currentPoints.getRow((int)tmp.getKey()).getY();
+            double x2 = currentPoints.getRow((int)tmp.getValue()).getX();
+            double y2 = currentPoints.getRow((int)tmp.getValue()).getY();
             gc.strokeLine(x1, y1, x2, y2);
         }
+        tNet = new TransformationMatrix();
     }
 
     private static void configureFileChooser(final FileChooser fileChooser, boolean isSelectingVertices) {
@@ -472,12 +452,6 @@ public class Main extends Application {
         return new Pair<>(vertexOne, vertexTwo);
     }
 
-    private void printLines() {
-        for (Pair tmp : this.lines) {
-            System.out.println(tmp.toString());
-        }
-    }
-
     private void openLinesFile(File file) {
         List<Pair> lines = new ArrayList<>();
         try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
@@ -493,9 +467,6 @@ public class Main extends Application {
         }
 
         this.lines = lines;
-
-        // debugging
-        // printLines();
     }
 
     private void translate(Double xShift, Double yShift, Double zShift) {
