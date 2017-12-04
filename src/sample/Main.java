@@ -29,7 +29,7 @@ public class Main extends Application {
     private static final int WIDTH = 600;
     private static final int HEIGHT = 600;
     private static final double SHAPE_DIMENSION = 20.0;
-    private static final double ROTATION_FACTOR = 0.1;
+    private static final double ROTATION_FACTOR = 0.2;
 
     private static final String SCENE_TITLE = "COMP 4560 Assignment 5 - A00797801";
     private static final String USAGE_TITLE = "Usage";
@@ -99,8 +99,6 @@ public class Main extends Application {
     private Matrix tNet = new Matrix();
     private List<Pair> lines = new ArrayList<>();
     private Canvas canvas;
-
-    private double scaleFactor;
 
     @Override
     public void start(Stage primaryStage) throws Exception{
@@ -174,20 +172,22 @@ public class Main extends Application {
         Tooltip tooltipScaleUp = new Tooltip(Tooltips.SCALE_UP.toString());
         buttonScaleUp.setTooltip(tooltipScaleUp);
         buttonScaleUp.setOnAction(e -> {
-            // calculate middle of shape on canvas
-            double xMiddle = (canvas.getWidth() - (SHAPE_DIMENSION * scaleFactor))/2;
-            double yMiddle = (canvas.getHeight() - (SHAPE_DIMENSION * scaleFactor))/2;
+            // calculate middle of shape
+            double xMiddle = tNet.getRow(3).getX();
+            double yMiddle = tNet.getRow(3).getY();
+            double zMiddle = tNet.getRow(3).getZ();
             // offset top left point of shape by half of size
-            xMiddle += SHAPE_DIMENSION/2 * scaleFactor;
-            yMiddle += SHAPE_DIMENSION/2 * scaleFactor;
+            xMiddle += SHAPE_DIMENSION/2 * Math.abs(tNet.getRow(0).getX());
+            yMiddle -= SHAPE_DIMENSION/2 * Math.abs(tNet.getRow(1).getY());
+            zMiddle += SHAPE_DIMENSION/2 * Math.abs(tNet.getRow(2).getZ());
 
             // move middle of shape to 0, 0
-            translate(-xMiddle, -yMiddle, 0.0);
+            translate(-xMiddle, -yMiddle, -zMiddle);
 
             scale(1.1, 1.1, 1.1);
 
             // move shape back
-            translate(xMiddle, yMiddle, 0.0);
+            translate(xMiddle, yMiddle, zMiddle);
 
             draw(gc);
         });
@@ -199,19 +199,21 @@ public class Main extends Application {
         buttonScaleDown.setTooltip(tooltipScaleDown);
         buttonScaleDown.setOnAction(e -> {
             // calculate middle of shape
-            double xMiddle = (canvas.getWidth() - (SHAPE_DIMENSION * scaleFactor))/2;
-            double yMiddle = (canvas.getHeight() - (SHAPE_DIMENSION * scaleFactor))/2;
+            double xMiddle = tNet.getRow(3).getX();
+            double yMiddle = tNet.getRow(3).getY();
+            double zMiddle = tNet.getRow(3).getZ();
             // offset top left point of shape by half of size
-            xMiddle += SHAPE_DIMENSION/2 * scaleFactor;
-            yMiddle += SHAPE_DIMENSION/2 * scaleFactor;
+            xMiddle += SHAPE_DIMENSION/2 * Math.abs(tNet.getRow(0).getX());
+            yMiddle -= SHAPE_DIMENSION/2 * Math.abs(tNet.getRow(1).getY());
+            zMiddle += SHAPE_DIMENSION/2 * Math.abs(tNet.getRow(2).getZ());
 
             // move middle of shape to 0,0
-            translate(-xMiddle, -yMiddle, 0.0);
+            translate(-xMiddle, -yMiddle, -zMiddle);
 
             scale(0.9, 0.9, 0.9);
 
             // move shape back
-            translate(xMiddle, yMiddle, 0.0);
+            translate(xMiddle, yMiddle, zMiddle);
 
             draw(gc);
         });
@@ -222,22 +224,26 @@ public class Main extends Application {
         Tooltip tooltipRotateX = new Tooltip(Tooltips.ROTATE_X.toString());
         buttonRotateX.setTooltip(tooltipRotateX);
         buttonRotateX.setOnAction(e -> {
-            // calculate middle of shape on canvas
-            double xMiddle = (canvas.getWidth() - (SHAPE_DIMENSION * scaleFactor))/2;
-            double yMiddle = (canvas.getHeight() - (SHAPE_DIMENSION * scaleFactor))/2;
+            System.out.println("ORIGINAL\n" + multiplyMatrix(initialPoints, tNet));
+            // calculate middle of shape
+            double xMiddle = tNet.getRow(3).getX();
+            double yMiddle = tNet.getRow(3).getY();
+//            double zMiddle = tNet.getRow(3).getZ();
             // offset top left point of shape by half of size
-            xMiddle += SHAPE_DIMENSION/2 * scaleFactor;
-            yMiddle += SHAPE_DIMENSION/2 * scaleFactor;
-            double zOffset =  SHAPE_DIMENSION/2 * scaleFactor;
+            xMiddle += SHAPE_DIMENSION/2 * Math.abs(tNet.getRow(0).getX());
+            yMiddle -= SHAPE_DIMENSION/2 * Math.abs(tNet.getRow(1).getY());
+            double zMiddle = SHAPE_DIMENSION/2 * Math.abs(tNet.getRow(2).getZ());
 
             // move middle of shape to 0, 0
-            translate(-xMiddle, -yMiddle, -zOffset);
+//            translate(-xMiddle, -yMiddle, -zMiddle);
+            System.out.println("MOVE TO ORIGIN\n" + multiplyMatrix(initialPoints, tNet));
 
             // rotate
             rotateX();
+//            System.out.println("ROTATE\n" + multiplyMatrix(initialPoints, tNet));
 
             // move shape back
-            translate(xMiddle, yMiddle, zOffset);
+            translate(xMiddle, yMiddle, zMiddle);
 
             draw(gc);
         });
@@ -248,13 +254,13 @@ public class Main extends Application {
         Tooltip tooltipRotateY = new Tooltip(Tooltips.ROTATE_Y.toString());
         buttonRotateY.setTooltip(tooltipRotateY);
         buttonRotateY.setOnAction(e -> {
-            // calculate middle of shape on canvas
-            double xMiddle = (canvas.getWidth() - (SHAPE_DIMENSION * scaleFactor))/2;
-            double yMiddle = (canvas.getHeight() - (SHAPE_DIMENSION * scaleFactor))/2;
+            // calculate middle of shape
+            double xMiddle = tNet.getRow(3).getX();
+            double yMiddle = tNet.getRow(3).getY();
             // offset top left point of shape by half of size
-            xMiddle += SHAPE_DIMENSION/2 * scaleFactor;
-            yMiddle += SHAPE_DIMENSION/2 * scaleFactor;
-            double zOffset =  SHAPE_DIMENSION/2 * scaleFactor;
+            xMiddle += SHAPE_DIMENSION/2 * Math.abs(tNet.getRow(0).getX());
+            yMiddle -= SHAPE_DIMENSION/2 * Math.abs(tNet.getRow(0).getX());
+            double zOffset =  SHAPE_DIMENSION/2 * Math.abs(tNet.getRow(0).getX());
 
             // move middle of shape to 0, 0
             translate(-xMiddle, -yMiddle, -zOffset);
@@ -274,22 +280,23 @@ public class Main extends Application {
         Tooltip tooltipRotateZ = new Tooltip(Tooltips.ROTATE_Z.toString());
         buttonRotateZ.setTooltip(tooltipRotateZ);
         buttonRotateZ.setOnAction(e -> {
-            // calculate middle of shape on canvas
-            double xMiddle = (canvas.getWidth() - (SHAPE_DIMENSION * scaleFactor))/2;
-            double yMiddle = (canvas.getHeight() - (SHAPE_DIMENSION * scaleFactor))/2;
+            // calculate middle of shape
+            double xMiddle = tNet.getRow(3).getX();
+            double yMiddle = tNet.getRow(3).getY();
+            double zMiddle = tNet.getRow(3).getZ();
             // offset top left point of shape by half of size
-            xMiddle += SHAPE_DIMENSION/2 * scaleFactor;
-            yMiddle += SHAPE_DIMENSION/2 * scaleFactor;
-            double zOffset =  SHAPE_DIMENSION/2 * scaleFactor;
+            xMiddle += SHAPE_DIMENSION/2 * Math.abs(tNet.getRow(0).getX());
+            yMiddle -= SHAPE_DIMENSION * Math.abs(tNet.getRow(1).getY());
+            zMiddle += SHAPE_DIMENSION/2 * Math.abs(tNet.getRow(2).getZ());
 
             // move middle of shape to 0, 0
-            translate(-xMiddle, -yMiddle, -zOffset);
+            translate(-xMiddle, -yMiddle, -zMiddle);
 
             // rotate
             rotateZ();
 
             // move shape back
-            translate(xMiddle, yMiddle, zOffset);
+            translate(xMiddle, yMiddle, 0.0);
 
             draw(gc);
         });
@@ -386,16 +393,17 @@ public class Main extends Application {
         reflectY();
 
         // move to 0, 0
-        translate(0.0, SHAPE_DIMENSION, 0.0);
+        translate(-SHAPE_DIMENSION/2, SHAPE_DIMENSION/2, -SHAPE_DIMENSION/2);
 
         // scale shape up to half the height of the canvas
-        this.scaleFactor = ((canvas.getHeight()/2) * SHAPE_DIMENSION)/(canvas.getHeight()/2);
+        double scaleFactor = ((canvas.getHeight()/2) * SHAPE_DIMENSION)/(canvas.getHeight()/2);
         scale(scaleFactor, scaleFactor, scaleFactor);
 
         // move shape to center of canvas
-        double xMiddle = (canvas.getWidth() - (SHAPE_DIMENSION * scaleFactor))/2;
-        double yMiddle = (canvas.getHeight() - (SHAPE_DIMENSION * scaleFactor))/2;
-        translate(xMiddle, yMiddle, 0.0);
+        double xMiddle = canvas.getWidth()/2;
+        double yMiddle = canvas.getHeight()/2;
+        double ZMiddle = canvas.getHeight()/2;
+        translate(xMiddle, yMiddle, ZMiddle);
     }
 
     private void draw(GraphicsContext gc) {
@@ -515,7 +523,7 @@ public class Main extends Application {
         tNet = multiplyMatrix(tNet, scalingMatrix);
     }
 
-    private void rotateX() {
+    private void rotateZ() {
         Matrix rotationMatrix = new TransformationMatrix();
         Vertex r1 = new Vertex(Math.cos(ROTATION_FACTOR), Math.sin(ROTATION_FACTOR), 0.0, 0.0);
         Vertex r2 = new Vertex(-Math.sin(ROTATION_FACTOR), Math.cos(ROTATION_FACTOR), 0.0, 0.0);
@@ -533,7 +541,7 @@ public class Main extends Application {
         tNet = multiplyMatrix(tNet, rotationMatrix);
     }
 
-    private void rotateZ() {
+    private void rotateX() {
         Matrix rotationMatrix = new TransformationMatrix();
         Vertex r2 = new Vertex(0.0, Math.cos(ROTATION_FACTOR), Math.sin(ROTATION_FACTOR), 0.0);
         Vertex r3 = new Vertex(0.0, -Math.sin(ROTATION_FACTOR), Math.cos(ROTATION_FACTOR), 0.0);
