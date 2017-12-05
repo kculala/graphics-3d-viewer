@@ -29,7 +29,7 @@ public class Main extends Application {
     private static final int WIDTH = 600;
     private static final int HEIGHT = 600;
     private static final double SHAPE_DIMENSION = 20.0;
-    private static final double ROTATION_FACTOR = 0.2;
+    private static final double ROTATION_FACTOR = 0.05;
 
     private static final String SCENE_TITLE = "COMP 4560 Assignment 5 - A00797801";
     private static final String USAGE_TITLE = "Usage";
@@ -104,8 +104,16 @@ public class Main extends Application {
     private Canvas canvas;
     private double scaleFactor;
 
+    private GraphicsContext gc;
+
+    private Timer timer;
+    private boolean isContinuouslyRotating;
+
     @Override
     public void start(Stage primaryStage) throws Exception{
+
+        isContinuouslyRotating = false;
+        timer = new Timer();
 
         primaryStage.setTitle(SCENE_TITLE);
         primaryStage.setMaximized(true);
@@ -125,7 +133,7 @@ public class Main extends Application {
         canvas.widthProperty().bind(wrapper.widthProperty());
         canvas.heightProperty().bind(wrapper.heightProperty());
 
-        GraphicsContext gc = canvas.getGraphicsContext2D();
+        gc = canvas.getGraphicsContext2D();
         gc.setStroke(Color.WHITE);
         gc.setLineWidth(1);
 
@@ -136,8 +144,13 @@ public class Main extends Application {
         Tooltip tooltipLeft = new Tooltip(Tooltips.TRANSLATE_LEFT.toString());
         buttonTranslateLeft.setTooltip(tooltipLeft);
         buttonTranslateLeft.setOnAction(e -> {
-            translate(-75.0, 0.0, 0.0);
-            draw(gc);
+            if(isContinuouslyRotating) {
+                isContinuouslyRotating = false;
+                clearTimer();
+            } else {
+                translate(-75.0, 0.0, 0.0);
+                draw(gc);
+            }
         });
 
         Image imageRight = new Image(new FileInputStream(ImagePaths.TRANSLATE_RIGHT.toString()));
@@ -146,8 +159,13 @@ public class Main extends Application {
         Tooltip tooltipRight = new Tooltip(Tooltips.TRANSLATE_RIGHT.toString());
         buttonTranslateRight.setTooltip(tooltipRight);
         buttonTranslateRight.setOnAction(e -> {
-            translate(75.0, 0.0, 0.0);
-            draw(gc);
+            if(isContinuouslyRotating) {
+                isContinuouslyRotating = false;
+                clearTimer();
+            } else {
+                translate(75.0, 0.0, 0.0);
+                draw(gc);
+            }
         });
 
         Image imageUp = new Image(new FileInputStream(ImagePaths.TRANSLATE_UP.toString()));
@@ -156,8 +174,13 @@ public class Main extends Application {
         Tooltip tooltipUp = new Tooltip(Tooltips.TRANSLATE_UP.toString());
         buttonTranslateUp.setTooltip(tooltipUp);
         buttonTranslateUp.setOnAction(e -> {
-            translate(0.0, -35.0, 0.0);
-            draw(gc);
+            if(isContinuouslyRotating) {
+                isContinuouslyRotating = false;
+                clearTimer();
+            } else {
+                translate(0.0, -35.0, 0.0);
+                draw(gc);
+            }
         });
 
         Image imageDown = new Image(new FileInputStream(ImagePaths.TRANSLATE_DOWN.toString()));
@@ -166,8 +189,13 @@ public class Main extends Application {
         Tooltip tooltipDown = new Tooltip(Tooltips.TRANSLATE_DOWN.toString());
         buttonTranslateDown.setTooltip(tooltipDown);
         buttonTranslateDown.setOnAction(e -> {
-            translate(0.0, 35.0, 0.0);
-            draw(gc);
+            if(isContinuouslyRotating) {
+                isContinuouslyRotating = false;
+                clearTimer();
+            } else {
+                translate(0.0, 35.0, 0.0);
+                draw(gc);
+            }
         });
 
         Image imageScaleUp = new Image(new FileInputStream(ImagePaths.SCALE_UP.toString()));
@@ -176,20 +204,25 @@ public class Main extends Application {
         Tooltip tooltipScaleUp = new Tooltip(Tooltips.SCALE_UP.toString());
         buttonScaleUp.setTooltip(tooltipScaleUp);
         buttonScaleUp.setOnAction(e -> {
-            // calculate middle of shape
-            double xMiddle = currentPoints.getRow(0).getX();
-            double yMiddle = currentPoints.getRow(0).getY();
-            double zMiddle = currentPoints.getRow(0).getZ();
+            if(isContinuouslyRotating) {
+                isContinuouslyRotating = false;
+                clearTimer();
+            } else {
+                // calculate middle of shape
+                double xMiddle = currentPoints.getRow(0).getX();
+                double yMiddle = currentPoints.getRow(0).getY();
+                double zMiddle = currentPoints.getRow(0).getZ();
 
-            // move middle of shape to 0, 0
-            translate(-xMiddle, -yMiddle, -zMiddle);
+                // move middle of shape to 0, 0
+                translate(-xMiddle, -yMiddle, -zMiddle);
 
-            scale(1.1, 1.1, 1.1);
+                scale(1.1, 1.1, 1.1);
 
-            // move shape back
-            translate(xMiddle, yMiddle, zMiddle);
+                // move shape back
+                translate(xMiddle, yMiddle, zMiddle);
 
-            draw(gc);
+                draw(gc);
+            }
         });
 
         Image imageScaleDown = new Image(new FileInputStream(ImagePaths.SCALE_DOWN.toString()));
@@ -198,20 +231,25 @@ public class Main extends Application {
         Tooltip tooltipScaleDown = new Tooltip(Tooltips.SCALE_DOWN.toString());
         buttonScaleDown.setTooltip(tooltipScaleDown);
         buttonScaleDown.setOnAction(e -> {
-            // calculate middle of shape
-            double xMiddle = currentPoints.getRow(0).getX();
-            double yMiddle = currentPoints.getRow(0).getY();
-            double zMiddle = currentPoints.getRow(0).getZ();
+            if(isContinuouslyRotating) {
+                isContinuouslyRotating = false;
+                clearTimer();
+            } else {
+                // calculate middle of shape
+                double xMiddle = currentPoints.getRow(0).getX();
+                double yMiddle = currentPoints.getRow(0).getY();
+                double zMiddle = currentPoints.getRow(0).getZ();
 
-            // move middle of shape to 0,0
-            translate(-xMiddle, -yMiddle, -zMiddle);
+                // move middle of shape to 0,0
+                translate(-xMiddle, -yMiddle, -zMiddle);
 
-            scale(0.9, 0.9, 0.9);
+                scale(0.9, 0.9, 0.9);
 
-            // move shape back
-            translate(xMiddle, yMiddle, zMiddle);
+                // move shape back
+                translate(xMiddle, yMiddle, zMiddle);
 
-            draw(gc);
+                draw(gc);
+            }
         });
 
         Image imageRotateX = new Image(new FileInputStream(ImagePaths.ROTATE_X.toString()));
@@ -220,21 +258,26 @@ public class Main extends Application {
         Tooltip tooltipRotateX = new Tooltip(Tooltips.ROTATE_X.toString());
         buttonRotateX.setTooltip(tooltipRotateX);
         buttonRotateX.setOnAction(e -> {
-            // calculate middle of shape
-            double xMiddle = currentPoints.getRow(0).getX();
-            double yMiddle = currentPoints.getRow(0).getY();
-            double zMiddle = currentPoints.getRow(0).getZ();
+            if(isContinuouslyRotating) {
+                isContinuouslyRotating = false;
+                clearTimer();
+            } else {
+                // calculate middle of shape
+                double xMiddle = currentPoints.getRow(0).getX();
+                double yMiddle = currentPoints.getRow(0).getY();
+                double zMiddle = currentPoints.getRow(0).getZ();
 
-            // move middle of shape to 0, 0
-            translate(-xMiddle, -yMiddle, -zMiddle);
+                // move middle of shape to 0, 0
+                translate(-xMiddle, -yMiddle, -zMiddle);
 
-            // rotate
-            rotateX();
+                // rotate
+                rotateX();
 
-            // move shape back
-            translate(xMiddle, yMiddle, zMiddle);
+                // move shape back
+                translate(xMiddle, yMiddle, zMiddle);
 
-            draw(gc);
+                draw(gc);
+            }
         });
 
         Image imageRotateY = new Image(new FileInputStream(ImagePaths.ROTATE_Y.toString()));
@@ -243,21 +286,26 @@ public class Main extends Application {
         Tooltip tooltipRotateY = new Tooltip(Tooltips.ROTATE_Y.toString());
         buttonRotateY.setTooltip(tooltipRotateY);
         buttonRotateY.setOnAction(e -> {
-            // calculate middle of shape
-            double xMiddle = currentPoints.getRow(0).getX();
-            double yMiddle = currentPoints.getRow(0).getY();
-            double zMiddle = currentPoints.getRow(0).getZ();
+            if(isContinuouslyRotating) {
+                isContinuouslyRotating = false;
+                clearTimer();
+            } else {
+                // calculate middle of shape
+                double xMiddle = currentPoints.getRow(0).getX();
+                double yMiddle = currentPoints.getRow(0).getY();
+                double zMiddle = currentPoints.getRow(0).getZ();
 
-            // move middle of shape to 0, 0
-            translate(-xMiddle, -yMiddle, -zMiddle);
+                // move middle of shape to 0, 0
+                translate(-xMiddle, -yMiddle, -zMiddle);
 
-            // rotate
-            rotateY();
+                // rotate
+                rotateY();
 
-            // move shape back
-            translate(xMiddle, yMiddle, zMiddle);
+                // move shape back
+                translate(xMiddle, yMiddle, zMiddle);
 
-            draw(gc);
+                draw(gc);
+            }
         });
 
         Image imageRotateZ = new Image(new FileInputStream(ImagePaths.ROTATE_Z.toString()));
@@ -266,20 +314,25 @@ public class Main extends Application {
         Tooltip tooltipRotateZ = new Tooltip(Tooltips.ROTATE_Z.toString());
         buttonRotateZ.setTooltip(tooltipRotateZ);
         buttonRotateZ.setOnAction(e -> {
-            double xMiddle = currentPoints.getRow(0).getX();
-            double yMiddle = currentPoints.getRow(0).getY();
-            double zMiddle = currentPoints.getRow(0).getZ();
+            if(isContinuouslyRotating) {
+                isContinuouslyRotating = false;
+                clearTimer();
+            } else {
+                double xMiddle = currentPoints.getRow(0).getX();
+                double yMiddle = currentPoints.getRow(0).getY();
+                double zMiddle = currentPoints.getRow(0).getZ();
 
-            // move middle of shape to 0, 0
-            translate(-xMiddle, -yMiddle, -zMiddle);
+                // move middle of shape to 0, 0
+                translate(-xMiddle, -yMiddle, -zMiddle);
 
-            // rotate
-            rotateZ();
+                // rotate
+                rotateZ();
 
-            // move shape back
-            translate(xMiddle, yMiddle, zMiddle);
+                // move shape back
+                translate(xMiddle, yMiddle, zMiddle);
 
-            draw(gc);
+                draw(gc);
+            }
         });
 
         Image imageShearLeft = new Image(new FileInputStream(ImagePaths.SHEAR_LEFT.toString()));
@@ -288,20 +341,25 @@ public class Main extends Application {
         Tooltip tooltipShearLeft = new Tooltip(Tooltips.SHEAR_LEFT.toString());
         buttonShearLeft.setTooltip(tooltipShearLeft);
         buttonShearLeft.setOnAction(e -> {
-            double xMiddle = currentPoints.getRow(0).getX() + (SHAPE_DIMENSION/2 * this.scaleFactor);
-            double yMiddle = currentPoints.getRow(0).getY() + (SHAPE_DIMENSION/2 * this.scaleFactor);
-            double zMiddle = currentPoints.getRow(0).getZ();
+            if(isContinuouslyRotating) {
+                isContinuouslyRotating = false;
+                clearTimer();
+            } else {
+                double xMiddle = currentPoints.getRow(0).getX() + (SHAPE_DIMENSION / 2 * this.scaleFactor);
+                double yMiddle = currentPoints.getRow(0).getY() + (SHAPE_DIMENSION / 2 * this.scaleFactor);
+                double zMiddle = currentPoints.getRow(0).getZ();
 
-            // move shape to original position (bot left corner at 0,0)
-            translate(-xMiddle, -yMiddle, -zMiddle);
+                // move shape to original position (bot left corner at 0,0)
+                translate(-xMiddle, -yMiddle, -zMiddle);
 
-            // shear
-            shearLeft();
+                // shear
+                shearLeft();
 
-            // move shape back
-            translate(xMiddle, yMiddle, zMiddle);
+                // move shape back
+                translate(xMiddle, yMiddle, zMiddle);
 
-            draw(gc);
+                draw(gc);
+            }
         });
 
         Image imageShearRight = new Image(new FileInputStream(ImagePaths.SHEAR_RIGHT.toString()));
@@ -310,20 +368,25 @@ public class Main extends Application {
         Tooltip tooltipShearRight = new Tooltip(Tooltips.SHEAR_RIGHT.toString());
         buttonShearRight.setTooltip(tooltipShearRight);
         buttonShearRight.setOnAction(e -> {
-            double xMiddle = currentPoints.getRow(0).getX() + (SHAPE_DIMENSION/2* this.scaleFactor);
-            double yMiddle = currentPoints.getRow(0).getY() + (SHAPE_DIMENSION/2* this.scaleFactor);
-            double zMiddle = currentPoints.getRow(0).getZ();
+            if(isContinuouslyRotating) {
+                isContinuouslyRotating = false;
+                clearTimer();
+            } else {
+                double xMiddle = currentPoints.getRow(0).getX() + (SHAPE_DIMENSION / 2 * this.scaleFactor);
+                double yMiddle = currentPoints.getRow(0).getY() + (SHAPE_DIMENSION / 2 * this.scaleFactor);
+                double zMiddle = currentPoints.getRow(0).getZ();
 
-            // move shape to original position (bot left corner at 0,0)
-            translate(-xMiddle, -yMiddle, -zMiddle);
+                // move shape to original position (bot left corner at 0,0)
+                translate(-xMiddle, -yMiddle, -zMiddle);
 
-            // shear
-            shearRight();
+                // shear
+                shearRight();
 
-            // move shape back
-            translate(xMiddle, yMiddle, zMiddle);
+                // move shape back
+                translate(xMiddle, yMiddle, zMiddle);
 
-            draw(gc);
+                draw(gc);
+            }
         });
 
         Image imageRestore = new Image(new FileInputStream(ImagePaths.RESTORE.toString()));
@@ -331,10 +394,14 @@ public class Main extends Application {
         buttonRestore.setGraphic(new ImageView(imageRestore));
         Tooltip tooltipRestore = new Tooltip(Tooltips.RESTORE.toString());
         buttonRestore.setTooltip(tooltipRestore);
-
         buttonRestore.setOnAction(e -> {
-            initShape();
-            draw(gc);
+            if(isContinuouslyRotating) {
+                isContinuouslyRotating = false;
+                clearTimer();
+            } else {
+                initShape();
+                draw(gc);
+            }
         });
 
         Image imageExit = new Image(new FileInputStream(ImagePaths.EXIT.toString()));
@@ -342,10 +409,40 @@ public class Main extends Application {
         buttonExit.setGraphic(new ImageView(imageExit));
         Tooltip tooltipExit = new Tooltip(Tooltips.EXIT.toString());
         buttonExit.setTooltip(tooltipExit);
+        buttonExit.setOnAction(e -> primaryStage.close());
 
         Button spinX = new Button("X");
+        spinX.setOnAction(e -> {
+            if(isContinuouslyRotating) {
+                isContinuouslyRotating = false;
+                clearTimer();
+            } else {
+                isContinuouslyRotating = true;
+                timer.schedule(new cRotationX(), 0, 50);
+            }
+        });
+
         Button spinY = new Button("Y");
+        spinY.setOnAction(e -> {
+            if(isContinuouslyRotating) {
+                isContinuouslyRotating = false;
+                clearTimer();
+            } else {
+                isContinuouslyRotating = true;
+                timer.schedule(new cRotationY(), 0, 50);
+            }
+        });
+
         Button spinZ = new Button("Z");
+        spinZ.setOnAction(e -> {
+            if (isContinuouslyRotating) {
+                isContinuouslyRotating = false;
+                clearTimer();
+            } else {
+                isContinuouslyRotating = true;
+                timer.schedule(new cRotationZ(), 0, 50);
+            }
+        });
 
         ToolBar toolBar = new ToolBar();
         toolBar.setOrientation(Orientation.VERTICAL);
@@ -569,6 +666,72 @@ public class Main extends Application {
         Vertex r2 = new Vertex(-0.1, 1.0, 0.0, 0.0);
         shearMatrix.setRow(1, r2);
         tNet = multiplyMatrix(tNet, shearMatrix);
+    }
+
+    class cRotationX extends TimerTask {
+        @Override
+        public void run() {
+            double xMiddle = currentPoints.getRow(0).getX();
+            double yMiddle = currentPoints.getRow(0).getY();
+            double zMiddle = currentPoints.getRow(0).getZ();
+
+            // move middle of shape to 0, 0
+            translate(-xMiddle, -yMiddle, -zMiddle);
+
+            // rotate
+            rotateX();
+
+            // move shape back
+            translate(xMiddle, yMiddle, zMiddle);
+
+            draw(gc);
+        }
+    }
+
+    class cRotationY extends TimerTask {
+        @Override
+        public void run() {
+            double xMiddle = currentPoints.getRow(0).getX();
+            double yMiddle = currentPoints.getRow(0).getY();
+            double zMiddle = currentPoints.getRow(0).getZ();
+
+            // move middle of shape to 0, 0
+            translate(-xMiddle, -yMiddle, -zMiddle);
+
+            // rotate
+            rotateY();
+
+            // move shape back
+            translate(xMiddle, yMiddle, zMiddle);
+
+            draw(gc);
+        }
+    }
+
+    class cRotationZ extends TimerTask {
+        @Override
+        public void run() {
+            double xMiddle = currentPoints.getRow(0).getX();
+            double yMiddle = currentPoints.getRow(0).getY();
+            double zMiddle = currentPoints.getRow(0).getZ();
+
+            // move middle of shape to 0, 0
+            translate(-xMiddle, -yMiddle, -zMiddle);
+
+            // rotate
+            rotateZ();
+
+            // move shape back
+            translate(xMiddle, yMiddle, zMiddle);
+
+            draw(gc);
+        }
+    }
+
+    private void clearTimer() {
+        timer.cancel();
+        timer.purge();
+        timer = new Timer();
     }
 
     public static void main(String[] args) {
