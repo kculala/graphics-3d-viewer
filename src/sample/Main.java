@@ -99,8 +99,10 @@ public class Main extends Application {
     private Matrix tNet = new Matrix();
     // points used to render shape at any given moment.
     private Matrix currentPoints = new Matrix();
+
     private List<Pair> lines = new ArrayList<>();
     private Canvas canvas;
+    private double scaleFactor;
 
     @Override
     public void start(Stage primaryStage) throws Exception{
@@ -285,12 +287,44 @@ public class Main extends Application {
         buttonShearLeft.setGraphic(new ImageView(imageShearLeft));
         Tooltip tooltipShearLeft = new Tooltip(Tooltips.SHEAR_LEFT.toString());
         buttonShearLeft.setTooltip(tooltipShearLeft);
+        buttonShearLeft.setOnAction(e -> {
+            double xMiddle = currentPoints.getRow(0).getX() + (SHAPE_DIMENSION/2 * this.scaleFactor);
+            double yMiddle = currentPoints.getRow(0).getY() + (SHAPE_DIMENSION/2 * this.scaleFactor);
+            double zMiddle = currentPoints.getRow(0).getZ();
+
+            // move shape to original position (bot left corner at 0,0)
+            translate(-xMiddle, -yMiddle, -zMiddle);
+
+            // shear
+            shearLeft();
+
+            // move shape back
+            translate(xMiddle, yMiddle, zMiddle);
+
+            draw(gc);
+        });
 
         Image imageShearRight = new Image(new FileInputStream(ImagePaths.SHEAR_RIGHT.toString()));
         Button buttonShearRight = new Button();
         buttonShearRight.setGraphic(new ImageView(imageShearRight));
         Tooltip tooltipShearRight = new Tooltip(Tooltips.SHEAR_RIGHT.toString());
         buttonShearRight.setTooltip(tooltipShearRight);
+        buttonShearRight.setOnAction(e -> {
+            double xMiddle = currentPoints.getRow(0).getX() + (SHAPE_DIMENSION/2* this.scaleFactor);
+            double yMiddle = currentPoints.getRow(0).getY() + (SHAPE_DIMENSION/2* this.scaleFactor);
+            double zMiddle = currentPoints.getRow(0).getZ();
+
+            // move shape to original position (bot left corner at 0,0)
+            translate(-xMiddle, -yMiddle, -zMiddle);
+
+            // shear
+            shearRight();
+
+            // move shape back
+            translate(xMiddle, yMiddle, zMiddle);
+
+            draw(gc);
+        });
 
         Image imageRestore = new Image(new FileInputStream(ImagePaths.RESTORE.toString()));
         Button buttonRestore = new Button();
@@ -369,6 +403,7 @@ public class Main extends Application {
     private void initShape() {
         tNet = new TransformationMatrix();
         currentPoints = initialPoints;
+        this.scaleFactor = 1.0;
 
         reflectY();
 
@@ -484,6 +519,7 @@ public class Main extends Application {
     }
 
     private void scale(Double xScale, Double yScale, Double zScale) {
+        this.scaleFactor *= xScale;
         Matrix scalingMatrix = new TransformationMatrix();
         Vertex r1 = new Vertex(xScale, 0.0, 0.0, 0.0);
         Vertex r2 = new Vertex(0.0, yScale, 0.0, 0.0);
@@ -519,6 +555,20 @@ public class Main extends Application {
         rotationMatrix.setRow(1, r2);
         rotationMatrix.setRow(2, r3);
         tNet = multiplyMatrix(tNet, rotationMatrix);
+    }
+
+    private void shearLeft() {
+        Matrix shearMatrix = new TransformationMatrix();
+        Vertex r2 = new Vertex(0.1, 1.0, 0.0, 0.0);
+        shearMatrix.setRow(1, r2);
+        tNet = multiplyMatrix(tNet, shearMatrix);
+    }
+
+    private void shearRight() {
+        Matrix shearMatrix = new TransformationMatrix();
+        Vertex r2 = new Vertex(-0.1, 1.0, 0.0, 0.0);
+        shearMatrix.setRow(1, r2);
+        tNet = multiplyMatrix(tNet, shearMatrix);
     }
 
     public static void main(String[] args) {
