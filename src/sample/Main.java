@@ -26,18 +26,7 @@ import static sample.Matrix.multiplyMatrix;
 
 public class Main extends Application {
 
-    private static final int WIDTH = 600;
-    private static final int HEIGHT = 600;
-    private static final double SHAPE_DIMENSION = 20.0;
-    private static final double ROTATION_FACTOR = 0.05;
-
     private static final String SCENE_TITLE = "COMP 4560 Assignment 5 - A00797801";
-    private static final String USAGE_TITLE = "Usage";
-    private static final String INSTRUCTIONS = "Please select two (2) files:\n" +
-            "The first file should contain a list of 3 numbers representing a vertex\n" +
-            "e.g. 10 10 0\n" +
-            "The second file should contain a list of 2 numbers representing a line\n" +
-            "e.g. 1 2";
     private static final String MENU_LABEL_FILE = "File";
     private static final String MENU_ITEM_LABEL_NEW_DATA = "New Data...";
 
@@ -93,6 +82,17 @@ public class Main extends Application {
         }
     }
 
+    private static final double SHAPE_DIMENSION = 20.0;
+
+    // constants used for various transformations
+    private static final double ROTATION = 0.05;
+    private static final double HORIZONTAL_TRANSLATION = 75.0;
+    private static final double VERTICAL_TRANSLATION = 35.0;
+    private static final double SCALE = 0.1;
+
+    // amount of time between each (continuous) rotation in milliseconds
+    private static final long TIMER_DELAY = 50;
+
     // initial points
     private Matrix initialPoints = new Matrix();
     // cumulative transformation matrix
@@ -100,10 +100,11 @@ public class Main extends Application {
     // points used to render shape at any given moment.
     private Matrix currentPoints = new Matrix();
 
+    // current scaling applied to shape; used to calculate how much to translate a shear to get shape to original spot.
+    private double currentScaleFactor;
+
     private List<Pair> lines = new ArrayList<>();
     private Canvas canvas;
-    private double scaleFactor;
-
     private GraphicsContext gc;
 
     private Timer timer;
@@ -112,19 +113,10 @@ public class Main extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception{
 
-        isContinuouslyRotating = false;
-        timer = new Timer();
-
         primaryStage.setTitle(SCENE_TITLE);
         primaryStage.setMaximized(true);
         Group root = new Group();
-        Scene scene = new Scene(root, WIDTH, HEIGHT, Color.BLACK);
-
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle(USAGE_TITLE);
-        alert.setHeaderText(null);
-        alert.setContentText(INSTRUCTIONS);
-        // alert.showAndWait();
+        Scene scene = new Scene(root, Color.BLACK);
 
         // canvas
         Pane wrapper = new Pane();
@@ -137,6 +129,9 @@ public class Main extends Application {
         gc.setStroke(Color.WHITE);
         gc.setLineWidth(1);
 
+        isContinuouslyRotating = false;
+        timer = new Timer();
+
         // toolbar
         Image imageLeft = new Image(new FileInputStream(ImagePaths.TRANSLATE_LEFT.toString()));
         Button buttonTranslateLeft = new Button();
@@ -148,7 +143,7 @@ public class Main extends Application {
                 isContinuouslyRotating = false;
                 clearTimer();
             } else {
-                translate(-75.0, 0.0, 0.0);
+                translate(-HORIZONTAL_TRANSLATION, 0.0, 0.0);
                 draw(gc);
             }
         });
@@ -163,7 +158,7 @@ public class Main extends Application {
                 isContinuouslyRotating = false;
                 clearTimer();
             } else {
-                translate(75.0, 0.0, 0.0);
+                translate(HORIZONTAL_TRANSLATION, 0.0, 0.0);
                 draw(gc);
             }
         });
@@ -178,7 +173,7 @@ public class Main extends Application {
                 isContinuouslyRotating = false;
                 clearTimer();
             } else {
-                translate(0.0, -35.0, 0.0);
+                translate(0.0, -VERTICAL_TRANSLATION, 0.0);
                 draw(gc);
             }
         });
@@ -193,7 +188,7 @@ public class Main extends Application {
                 isContinuouslyRotating = false;
                 clearTimer();
             } else {
-                translate(0.0, 35.0, 0.0);
+                translate(0.0, VERTICAL_TRANSLATION, 0.0);
                 draw(gc);
             }
         });
@@ -208,7 +203,6 @@ public class Main extends Application {
                 isContinuouslyRotating = false;
                 clearTimer();
             } else {
-                // calculate middle of shape
                 double xMiddle = currentPoints.getRow(0).getX();
                 double yMiddle = currentPoints.getRow(0).getY();
                 double zMiddle = currentPoints.getRow(0).getZ();
@@ -216,7 +210,7 @@ public class Main extends Application {
                 // move middle of shape to 0, 0
                 translate(-xMiddle, -yMiddle, -zMiddle);
 
-                scale(1.1, 1.1, 1.1);
+                scale(1.0 + SCALE);
 
                 // move shape back
                 translate(xMiddle, yMiddle, zMiddle);
@@ -235,7 +229,6 @@ public class Main extends Application {
                 isContinuouslyRotating = false;
                 clearTimer();
             } else {
-                // calculate middle of shape
                 double xMiddle = currentPoints.getRow(0).getX();
                 double yMiddle = currentPoints.getRow(0).getY();
                 double zMiddle = currentPoints.getRow(0).getZ();
@@ -243,7 +236,7 @@ public class Main extends Application {
                 // move middle of shape to 0,0
                 translate(-xMiddle, -yMiddle, -zMiddle);
 
-                scale(0.9, 0.9, 0.9);
+                scale(1.0 - SCALE);
 
                 // move shape back
                 translate(xMiddle, yMiddle, zMiddle);
@@ -262,7 +255,6 @@ public class Main extends Application {
                 isContinuouslyRotating = false;
                 clearTimer();
             } else {
-                // calculate middle of shape
                 double xMiddle = currentPoints.getRow(0).getX();
                 double yMiddle = currentPoints.getRow(0).getY();
                 double zMiddle = currentPoints.getRow(0).getZ();
@@ -290,7 +282,6 @@ public class Main extends Application {
                 isContinuouslyRotating = false;
                 clearTimer();
             } else {
-                // calculate middle of shape
                 double xMiddle = currentPoints.getRow(0).getX();
                 double yMiddle = currentPoints.getRow(0).getY();
                 double zMiddle = currentPoints.getRow(0).getZ();
@@ -345,8 +336,8 @@ public class Main extends Application {
                 isContinuouslyRotating = false;
                 clearTimer();
             } else {
-                double xMiddle = currentPoints.getRow(0).getX() + (SHAPE_DIMENSION / 2 * this.scaleFactor);
-                double yMiddle = currentPoints.getRow(0).getY() + (SHAPE_DIMENSION / 2 * this.scaleFactor);
+                double xMiddle = currentPoints.getRow(0).getX() + (SHAPE_DIMENSION / 2 * this.currentScaleFactor);
+                double yMiddle = currentPoints.getRow(0).getY() + (SHAPE_DIMENSION / 2 * this.currentScaleFactor);
                 double zMiddle = currentPoints.getRow(0).getZ();
 
                 // move shape to original position (bot left corner at 0,0)
@@ -372,8 +363,8 @@ public class Main extends Application {
                 isContinuouslyRotating = false;
                 clearTimer();
             } else {
-                double xMiddle = currentPoints.getRow(0).getX() + (SHAPE_DIMENSION / 2 * this.scaleFactor);
-                double yMiddle = currentPoints.getRow(0).getY() + (SHAPE_DIMENSION / 2 * this.scaleFactor);
+                double xMiddle = currentPoints.getRow(0).getX() + (SHAPE_DIMENSION / 2 * this.currentScaleFactor);
+                double yMiddle = currentPoints.getRow(0).getY() + (SHAPE_DIMENSION / 2 * this.currentScaleFactor);
                 double zMiddle = currentPoints.getRow(0).getZ();
 
                 // move shape to original position (bot left corner at 0,0)
@@ -418,7 +409,7 @@ public class Main extends Application {
                 clearTimer();
             } else {
                 isContinuouslyRotating = true;
-                timer.schedule(new cRotationX(), 0, 50);
+                timer.schedule(new cRotationX(), 0, TIMER_DELAY);
             }
         });
 
@@ -429,7 +420,7 @@ public class Main extends Application {
                 clearTimer();
             } else {
                 isContinuouslyRotating = true;
-                timer.schedule(new cRotationY(), 0, 50);
+                timer.schedule(new cRotationY(), 0, TIMER_DELAY);
             }
         });
 
@@ -500,7 +491,7 @@ public class Main extends Application {
     private void initShape() {
         tNet = new TransformationMatrix();
         currentPoints = initialPoints;
-        this.scaleFactor = 1.0;
+        this.currentScaleFactor = 1.0;
 
         reflectY();
 
@@ -509,7 +500,7 @@ public class Main extends Application {
 
         // scale shape up to half the height of the canvas
         double scaleFactor = ((canvas.getHeight()/2) * SHAPE_DIMENSION)/(canvas.getHeight()/2);
-        scale(scaleFactor, scaleFactor, scaleFactor);
+        scale(scaleFactor);
 
         // move shape to center of canvas
         double xMiddle = canvas.getWidth()/2;
@@ -530,6 +521,7 @@ public class Main extends Application {
         tNet = new TransformationMatrix();
     }
 
+    // IO related methods
     private static void configureFileChooser(final FileChooser fileChooser, boolean isSelectingVertices) {
         String dataFile = isSelectingVertices ? "vertices" : "lines";
         String title = "Choose data file containing list of " + dataFile;
@@ -601,6 +593,15 @@ public class Main extends Application {
         this.lines = lines;
     }
 
+    // transformation methods
+
+    /**
+     * Update tNet with a translation
+     *
+     * @param xShift the number of screen coordinates to translate in the positive x direction
+     * @param yShift the number of screen coordinates to translate in the positive y direction
+     * @param zShift the number of screen coordinates to translate in the positive z direction
+     */
     private void translate(Double xShift, Double yShift, Double zShift) {
         Matrix translationMatrix = new TransformationMatrix();
         Vertex r4 = new Vertex(xShift, yShift, zShift, 1.0);
@@ -608,6 +609,11 @@ public class Main extends Application {
         tNet = multiplyMatrix(tNet, translationMatrix);
     }
 
+    /**
+     * Update tNet with a reflection.<br>
+     *     Used solely for flipping the shape's initial points due to y increasing downwards on screen
+     *
+     */
     private void reflectY() {
         Matrix reflectMatrix = new TransformationMatrix();
         Vertex r2 = new Vertex(0.0, -1.0, 0.0, 0.0);
@@ -615,45 +621,62 @@ public class Main extends Application {
         tNet = multiplyMatrix(tNet, reflectMatrix);
     }
 
-    private void scale(Double xScale, Double yScale, Double zScale) {
-        this.scaleFactor *= xScale;
+    /**
+     * Update tNet with a scale.
+     *
+     * @param scale the factor to scale shape in (all axes)
+     */
+    private void scale(Double scale) {
+        this.currentScaleFactor *= scale;
         Matrix scalingMatrix = new TransformationMatrix();
-        Vertex r1 = new Vertex(xScale, 0.0, 0.0, 0.0);
-        Vertex r2 = new Vertex(0.0, yScale, 0.0, 0.0);
-        Vertex r3 = new Vertex(0.0, 0.0, zScale, 0.0);
+        Vertex r1 = new Vertex(scale, 0.0, 0.0, 0.0);
+        Vertex r2 = new Vertex(0.0, scale, 0.0, 0.0);
+        Vertex r3 = new Vertex(0.0, 0.0, scale, 0.0);
         scalingMatrix.setRow(0, r1);
         scalingMatrix.setRow(1, r2);
         scalingMatrix.setRow(2, r3);
         tNet = multiplyMatrix(tNet, scalingMatrix);
     }
 
-    private void rotateZ() {
-        Matrix rotationMatrix = new TransformationMatrix();
-        Vertex r1 = new Vertex(Math.cos(ROTATION_FACTOR), Math.sin(ROTATION_FACTOR), 0.0, 0.0);
-        Vertex r2 = new Vertex(-Math.sin(ROTATION_FACTOR), Math.cos(ROTATION_FACTOR), 0.0, 0.0);
-        rotationMatrix.setRow(0, r1);
-        rotationMatrix.setRow(1, r2);
-        tNet = multiplyMatrix(tNet, rotationMatrix);
-    }
-
-    private void rotateY() {
-        Matrix rotationMatrix = new TransformationMatrix();
-        Vertex r1 = new Vertex(Math.cos(ROTATION_FACTOR), 0.0, -Math.sin(ROTATION_FACTOR), 0.0);
-        Vertex r3 = new Vertex(Math.sin(ROTATION_FACTOR), 0.0, Math.cos(ROTATION_FACTOR), 0.0);
-        rotationMatrix.setRow(0, r1);
-        rotationMatrix.setRow(2, r3);
-        tNet = multiplyMatrix(tNet, rotationMatrix);
-    }
-
+    /**
+     * Update tNet with a rotation about the x axis.
+     */
     private void rotateX() {
         Matrix rotationMatrix = new TransformationMatrix();
-        Vertex r2 = new Vertex(0.0, Math.cos(ROTATION_FACTOR), Math.sin(ROTATION_FACTOR), 0.0);
-        Vertex r3 = new Vertex(0.0, -Math.sin(ROTATION_FACTOR), Math.cos(ROTATION_FACTOR), 0.0);
+        Vertex r2 = new Vertex(0.0, Math.cos(ROTATION), Math.sin(ROTATION), 0.0);
+        Vertex r3 = new Vertex(0.0, -Math.sin(ROTATION), Math.cos(ROTATION), 0.0);
         rotationMatrix.setRow(1, r2);
         rotationMatrix.setRow(2, r3);
         tNet = multiplyMatrix(tNet, rotationMatrix);
     }
 
+    /**
+     * Update tNet with a rotation about the y axis.
+     */
+    private void rotateY() {
+        Matrix rotationMatrix = new TransformationMatrix();
+        Vertex r1 = new Vertex(Math.cos(ROTATION), 0.0, -Math.sin(ROTATION), 0.0);
+        Vertex r3 = new Vertex(Math.sin(ROTATION), 0.0, Math.cos(ROTATION), 0.0);
+        rotationMatrix.setRow(0, r1);
+        rotationMatrix.setRow(2, r3);
+        tNet = multiplyMatrix(tNet, rotationMatrix);
+    }
+
+    /**
+     * Update tNet with a rotation about the z axis.
+     */
+    private void rotateZ() {
+        Matrix rotationMatrix = new TransformationMatrix();
+        Vertex r1 = new Vertex(Math.cos(ROTATION), Math.sin(ROTATION), 0.0, 0.0);
+        Vertex r2 = new Vertex(-Math.sin(ROTATION), Math.cos(ROTATION), 0.0, 0.0);
+        rotationMatrix.setRow(0, r1);
+        rotationMatrix.setRow(1, r2);
+        tNet = multiplyMatrix(tNet, rotationMatrix);
+    }
+
+    /**
+     * Update tNet with a left shear in y axis.
+     */
     private void shearLeft() {
         Matrix shearMatrix = new TransformationMatrix();
         Vertex r2 = new Vertex(0.1, 1.0, 0.0, 0.0);
@@ -661,6 +684,9 @@ public class Main extends Application {
         tNet = multiplyMatrix(tNet, shearMatrix);
     }
 
+    /**
+     * Update tNet with a right shear in y axis.
+     */
     private void shearRight() {
         Matrix shearMatrix = new TransformationMatrix();
         Vertex r2 = new Vertex(-0.1, 1.0, 0.0, 0.0);
